@@ -15,6 +15,9 @@ def existe_archivo(ruta_directorio: str, nombre_archivo:str) -> bool:
     return os.path.exists(os.path.join(ruta_directorio, nombre_archivo))
 
 
+valores = ["0","1","2","3","4","5","6","7","8"]
+celdas_descubiertas = []
+
 
 # -- FUNCION: COLOCAR_MINAS() ---------------------------------------------------------------------------------
 
@@ -118,8 +121,8 @@ def crear_juego(filas:int, columnas:int, minas:int) -> EstadoJuego:
     }
     
     if estado_valido(estado): return estado
+    else: return "ERROR EN CREAR_JUEGO()"
     
-
 # -- CREAR_TABLERO_VACIO() ----------------------------------------
 
 def tablero_vacio(filas: int, columnas: int) -> list[list[int]]:
@@ -140,7 +143,7 @@ def tablero_vacio(filas: int, columnas: int) -> list[list[int]]:
 def estado_valido(estado: EstadoJuego) -> bool:
     if estructura_y_tipos_validos(estado):
         if contar_minas(estado) == estado["minas"]:
-            if estado["tablero"] == calcular_numeros(estado["tablero"]):
+            if numeros_correctos(estado["tablero"]): 
                 if ((todas_celdas_seguras_descubiertas(estado["tablero"], estado["tablero_visible"]) or hay_bomba_en_tablero(estado["tablero_visible"])) and estado["juego_terminado"] == True) or estado["juego_terminado"] == False:
                     if verificar_posicion_bombas(estado["tablero"], estado["tablero_visible"]):
                         if verificar_posicion_no_bombas(estado["tablero"], estado["tablero_visible"]): return True
@@ -148,7 +151,24 @@ def estado_valido(estado: EstadoJuego) -> bool:
     return False
 
 
-
+# -- NUMEROS_CORRECTOS() -------------------------------------
+def numeros_correctos(tablero: list[list[int]]) -> bool:
+    
+    for i in range(len(tablero)):
+        for j in range(len(tablero[0])):
+            coordenada = [i,j]
+            contador_bombas = 0
+            if tablero[i][j] != -1:
+                for k in range((coordenada[0])-1,(coordenada[0])+2):        
+                    for l in range((coordenada[1])-1,(coordenada[1])+2):
+                        if k >= 0 and l >= 0 and k < (len(tablero)) and l < (len(tablero[0])):
+                            if tablero[k][l] == -1: 
+                                
+                                contador_bombas += 1
+            
+                if contador_bombas != tablero[i][j]: return False
+    
+    return True
 
 
 # -- ESTRUCTURAS_Y_TIPOS_VALIDOS() ----------------------------------------
@@ -181,13 +201,14 @@ def validar_tablero(estado: EstadoJuego) -> bool:
     for lista in estado["tablero"]:
             for i in range(len(lista)):
                 elemento = lista[i]
-                if -1 > elemento > 8: return False
+                if elemento < -1 or elemento > 8: return False
+
                 
     return True
 
 
 def validar_tablero_visible(estado: EstadoJuego) -> bool:
-    valores = ["0","1","2","3","4","5","6","7","8"]
+    global valores
     for lista in estado["tablero_visible"]:
             for i in range(len(lista)):
                 elemento = lista[i]
@@ -314,9 +335,12 @@ def marcar_celda(estado: EstadoJuego, fila: int, columna: int) -> None:
 
 # -- DESCUBRIR_CELDA() -------------------------------------------------------------------------
 
-def descubrir_celda(estado: EstadoJuego, fila: int, columna: int) -> None:        
+def descubrir_celda(estado: EstadoJuego, fila: int, columna: int) -> None:
+         
     verificar_si_perdiste(estado,fila,columna)
-    if estado["juego_terminado"] == False:      
+    if estado["juego_terminado"] == False:  
+        global celdas_descubiertas
+        celdas_descubiertas = []     
         caminos = caminos_descubiertos(estado["tablero"], estado["tablero_visible"], fila,columna)
         for i in range(estado["filas"]):
             for j in range(estado["columnas"]):
@@ -345,8 +369,6 @@ def celda_es_numero(tablero: list[list[int]], tablero_visible: list[list[int]], 
 
 
 # -- CELDA_ES_CERO() ------------------------------------------
-
-celdas_descubiertas = []
     
 def celda_es_cero(tablero: list[list[int]], tablero_visible: list[list[int]], fila: int, columna: int) -> list[tuple[int,int]]:
     coordenada: list[int] = [fila,columna]   
@@ -357,7 +379,8 @@ def celda_es_cero(tablero: list[list[int]], tablero_visible: list[list[int]], fi
     for i in range((coordenada[0])-1,(coordenada[0])+2):        
         for j in range((coordenada[1])-1,(coordenada[1])+2):
             
-            if i >= 0 and j >= 0 and i < (len(tablero[0])) and j < (len(tablero)):
+            if i >= 0 and j >= 0 and i < len(tablero) and j < len(tablero[0]):
+
                 if tablero[i][j] == 0 and (i,j) not in celdas_descubiertas:
                     celda_es_cero(tablero, tablero_visible, i, j)
                     
@@ -385,6 +408,10 @@ def verificar_victoria(estado: EstadoJuego) -> bool:
 
 def reiniciar_juego(estado: EstadoJuego) -> None:
     estado2 = crear_juego(estado["filas"], estado["columnas"], estado["minas"])
+    
+    while estado["tablero"] == estado2["tablero"]:
+         estado2 = crear_juego(estado["filas"], estado["columnas"], estado["minas"])
+        
     global celdas_descubiertas
     celdas_descubiertas = []
     estado["tablero"] = estado2["tablero"]
@@ -432,11 +459,11 @@ def clasificar_celda(celda: Any):
 ruta_directorio = "trabajo"
 
 
-def contar_numeros_fila(linea: list) -> int:
+def contar_numeros_fila(linea: list[str]) -> int:
     contador = 0
-    global caracteres_validos    
+    global valores    
     for elemento in linea:
-        if elemento in caracteres_validos: contador += 1    
+        if elemento in valores: contador += 1    
     return contador
     
     
@@ -450,59 +477,90 @@ def archivo_como_lista(ruta_directorio, archivo) -> list[str]:
 
 def cargar_estado(estado: EstadoJuego, ruta_directorio: str) -> bool:
     
-    largo_col = len(estado["tablero"])
-    largo_fila = len(estado["tablero"][0])
-    
     
     if existe_archivo(ruta_directorio, "tablero.txt") and existe_archivo(ruta_directorio, "tablero_visible.txt"):
-        
         tablero = archivo_como_lista(ruta_directorio, "tablero.txt")
-        tablero_visible = archivo_como_lista(ruta_directorio, "tablero.txt")
+        tablero_visible = archivo_como_lista(ruta_directorio, "tablero_visible.txt")
         
-        for i in range(largo_col):            
-                if contar_numeros_fila(tablero[i]) == largo_fila:
-                    
-                    for j in range(largo_fila):pass        
-                
-
+        estado_archivo = crear_estado_desde_archivo(tablero, tablero_visible)
+        estado["filas"] = estado_archivo["filas"]
+        estado["columnas"] = estado_archivo["columnas"]
+        estado["minas"] = estado_archivo["minas"]
+        estado["juego_terminado"] = estado_archivo["juego_terminado"]
+        estado["tablero"] = estado_archivo["tablero"]
+        estado["tablero_visible"] = estado_archivo["tablero_visible"]
+        
+        return True
+        
     return False
-
-def numeros_correctos(tablero: list[list[int]]):
+        
+                 
+  
+  
+  
+# -- CREAR UN TABLERO DESDE UN ARCHIVO -----------------------------------------------------
+          
+def crear_tablero(tablero: list[str]) -> list[list[int]]:
+    lista_fila = []
+    lista_tablero = []
+    global valores
     
-    for i in range(len(tablero)):
-        for j in range(len(tablero[0])):
+    for elemento in tablero:
+        for i in range(len(elemento)):
             
-            coordenada = [i,j]
-            contador_bombas = 0
-            if tablero[i][j] != -1:
-                for k in range((coordenada[0])-1,(coordenada[0])+2):        
-                    for l in range((coordenada[1])-1,(coordenada[1])+2):
+            if i != 0 and elemento[i-1] == "-": continue
+            
+            if elemento[i] == "-": lista_fila.append(-1)
+            elif elemento[i] in valores: lista_fila.append(int(elemento[i]))
                 
-                        if k >= 0 and l >= 0 and k < (len(tablero[0])) and l < (len(tablero)):
-                            if tablero[k][l] == -1: contador_bombas += 1
-            
-                if contador_bombas != tablero[i][j]: return False
+        lista_tablero.append(lista_fila)
+                
+        lista_fila = []
+        
+    return lista_tablero
+        
+        
+# -- CREAR UN TABLERO VISIBLE DESDE UN ARCHIVO -------------------------------------
+def crear_tablero_visible(tablero_visible: list[str]) -> list[list[Any]]:
+    lista_fila = []
+    lista_tablero = []
+    global valores
     
-    return True
-            
-            
-            
-estado = {
-        "filas" : 2,
-        "columnas" : 2,
-        "minas" : 1,
-        "juego_terminado" : False,
-        "tablero" : [
-        [-1, 1],
-        [1, 1]
-    ],
-        "tablero_visible": [
-        [VACIO, VACIO],
-        [VACIO, VACIO]
-    ]
-    }
+    for elemento in tablero_visible:
+        for i in range(len(elemento)):
+                        
+            if elemento[i] in valores: lista_fila.append(elemento[i])
+            elif elemento[i] == "?": lista_fila.append(VACIO)
+            elif elemento[i] == "*" : lista_fila.append(BANDERA)
+                
+        lista_tablero.append(lista_fila)
+                
+        lista_fila = []
+        
+    return lista_tablero
+        
 
-print(numeros_correctos(estado["tablero"]))
+def crear_estado_desde_archivo(tablero: list[str], tablero_visible: list[str]) -> EstadoJuego:
+    
+    estado: EstadoJuego = {
+        "filas" : 0,
+        "columnas" : 0,
+        "minas" : 0,
+        "juego_terminado" : False,
+        "tablero" : crear_tablero(tablero),
+        "tablero_visible": crear_tablero_visible(tablero_visible)      
+    }
+    
+    estado["minas"] = contar_minas(estado)
+    estado["columnas"] = len(estado["tablero"][0])
+    estado["filas"] = len(estado["tablero"])
+    
+    if estado_valido(estado): return estado
+    
+    else: return "ERROR ESTADO CREADO DESDE ARCHIVO NO VALIDO"
+    
+    
+
 
 
 
