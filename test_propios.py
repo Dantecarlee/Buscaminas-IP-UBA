@@ -857,7 +857,7 @@ class reiniciar_juegoTest(unittest.TestCase):
 
 
 class guardar_estadoTest(unittest.TestCase):
-    def test_uno(self):
+    def test_estado_iniciado(self):
         estado: EstadoJuego = {
             'filas': 3,
             'columnas': 3,
@@ -875,9 +875,10 @@ class guardar_estadoTest(unittest.TestCase):
             'juego_terminado': False
         }
         
-        ruta_directorio = os.path.join("test_guardar_estado", "test_uno")
+        ruta_directorio = os.path.join("test_guardar_estado", "test_estado_iniciado")
         valores = ["0","1","2","3","4","5","6","7","8","-"] 
         
+        #Guardamos el estado en el archivo
         guardar_estado(estado, ruta_directorio)
         
         # Para tablero.txt
@@ -894,9 +895,61 @@ class guardar_estadoTest(unittest.TestCase):
                 
                 if lista_archivo[i][j] == "-":
                     j += 1
+                    #Testeamos que si en el archivo hay un "-", en el tablero debe haber un "-1"
                     self.assertEqual(estado['tablero'][i][k], -1)
                                         
-                else: self.assertEqual(int(lista_archivo[i][j]), estado['tablero'][i][k])
+                else: 
+                    #Testeamos que el número que aparece en el, archivo coincida con el de el ablero en esa misma coordenada
+                    self.assertEqual(int(lista_archivo[i][j]), estado['tablero'][i][k])
+                
+                j += 1
+                k += 1
+       
+                
+    def test_estado_no_iniciado(self):
+        estado: EstadoJuego = {
+            'filas': 3,
+            'columnas': 3,
+            'minas': 1,
+            'tablero': [
+                [1, 2, -1],
+                [-1, 3, 1],
+                [-1, 2, 0]
+            ],
+            'tablero_visible': [
+                [VACIO, VACIO, VACIO],
+                [VACIO, VACIO, VACIO],
+                [VACIO, VACIO, VACIO]
+            ],
+            'juego_terminado': False
+        }
+        
+        ruta_directorio = os.path.join("test_guardar_estado", "test_estado_no_iniciado")
+        valores = ["0","1","2","3","4","5","6","7","8","-"] 
+        
+        #Guardamos el estado en el archivo
+        guardar_estado(estado, ruta_directorio)
+        
+        # Para tablero.txt
+        archivo = open(f"{ruta_directorio}\\tablero.txt", "r", encoding="UTF-8")
+        lista_archivo = archivo.readlines()
+        archivo.close()
+                
+        for i in range(len(estado['tablero'])):
+            j = 0
+            k = 0
+            while j < len(lista_archivo[i]) and k < len(estado['tablero'][0]):
+                while lista_archivo[i][j] not in valores:
+                    j += 1
+                
+                if lista_archivo[i][j] == "-":
+                    j += 1
+                    #Testeamos que si en el archivo hay un "-", en el tablero debe haber un "-1"
+                    self.assertEqual(estado['tablero'][i][k], -1)
+                                        
+                else: 
+                    #Testeamos que el número que aparece en el, archivo coincida con el de el ablero en esa misma coordenada
+                    self.assertEqual(int(lista_archivo[i][j]), estado['tablero'][i][k])
                 
                 j += 1
                 k += 1
@@ -916,12 +969,16 @@ class guardar_estadoTest(unittest.TestCase):
                     j += 1
                 
                 if lista_archivo[i][j] == "*":
+                    #Testeamos que si hay un "*" en archivo, en la misma coordenada de tablero visible haya una BANDERA
                     self.assertEqual(estado['tablero_visible'][i][k], BANDERA)
                     
                 elif lista_archivo[i][j] == "?":
+                    #Testeamos que si hay un "?" en archivo, en la misma coordenada de tablero visible haya una BOMBA
                     self.assertEqual(estado['tablero_visible'][i][k], VACIO)
                                         
-                else: self.assertEqual((lista_archivo[i][j]), estado['tablero_visible'][i][k])
+                else: 
+                    #Testeamos que el número que aparece en el archivo coincida con el del tablero en esa misma coordenada
+                    self.assertEqual((lista_archivo[i][j]), estado['tablero_visible'][i][k])
                 
                 j += 1
                 k += 1
@@ -929,7 +986,7 @@ class guardar_estadoTest(unittest.TestCase):
 
 class cargar_estadoTest(unittest.TestCase):
     
-    def test_cargar_estado_valido(self):
+    def test_cargar_juego_iniciado(self):
         
         #Definimos un estado trivial que será sobreescrito por el estado cargado
         estado: EstadoJuego = {
@@ -948,7 +1005,7 @@ class cargar_estadoTest(unittest.TestCase):
         }
         
             
-        ruta_directorio = os.path.join("test_cargar_estado", "test_estado_valido")
+        ruta_directorio = os.path.join("test_cargar_estado", "test_juego_iniciado")
         
         # Cargar el estado guardado en "test_estado_valido\\tablero.txt y tablero_visible.txt"
         resultado = cargar_estado(estado, ruta_directorio)
@@ -971,6 +1028,53 @@ class cargar_estadoTest(unittest.TestCase):
             [BANDERA, "2", "0"]
         ])
         self.assertFalse(estado['juego_terminado'])
+        
+    
+    def test_cargar_juego_no_iniciado(self):
+        
+        #Definimos un estado trivial que será sobreescrito por el estado cargado
+        estado: EstadoJuego = {
+            'filas': 3,
+            'columnas': 2,
+            'minas': 1,
+            'tablero': [
+                [-1, 1],
+                [1, 1],
+                [0, 0]
+            ],
+            'tablero_visible': [
+                [VACIO, VACIO],
+                ["1", "1"],
+                ["0", "0"]
+            ],
+            'juego_terminado': False
+        }
+        
+            
+        ruta_directorio = os.path.join("test_cargar_estado", "test_juego_no_iniciado")
+        
+        # Cargar el estado guardado en "test_estado_valido\\tablero.txt y tablero_visible.txt"
+        resultado = cargar_estado(estado, ruta_directorio)
+        
+        # Verificar que la carga fue correcta
+        self.assertTrue(resultado)
+        
+        # Verificar que los datos se cargaron correctamente
+        self.assertEqual(estado['filas'], 3)
+        self.assertEqual(estado['columnas'], 5)
+        self.assertEqual(estado['minas'], 3)
+        self.assertEqual(estado['tablero'], [
+            [1, 1, 0, 1, 1],
+            [-1, 2, 0, 1, -1],
+            [-1, 2, 0, 1, 1]
+        ])
+        self.assertEqual(estado['tablero_visible'], [
+            [VACIO, VACIO, VACIO, VACIO, VACIO],
+            [VACIO, VACIO, VACIO, VACIO, VACIO],
+            [VACIO, VACIO, VACIO, VACIO, VACIO]
+        ])
+        self.assertFalse(estado['juego_terminado'])
+        
         
     def test_cargar_estado_archivos_no_existen(self):
         estado: EstadoJuego = {

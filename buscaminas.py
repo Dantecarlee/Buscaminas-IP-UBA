@@ -16,13 +16,13 @@ def existe_archivo(ruta_directorio: str, nombre_archivo:str) -> bool:
 
 
 # La ruta directorio es la carpeta en la que están guardados los archivos
-ruta_directorio = "trabajo"
+ruta_directorio = "TP-Buscaminas-main"
 
 # Lista que contenga los valores de los números que puede tener cada celda pero con tipo "str"
-valores = ["0","1","2","3","4","5","6","7","8"] # Luego se usa como global dentro de las funciones
+valores: list[str] = ["0","1","2","3","4","5","6","7","8"] # Luego se usa como global dentro de las funciones
 
 # Lista vacia para ir completando con las cordenadas de las celdas que se van descubriendo
-celdas_descubiertas = [] # Luego se usa como global dentro de las funciones
+celdas_descubiertas: list[tuple[int,int]] = [] # Luego se usa como global dentro de las funciones
 
 
 # -- ELIGIR_BOMBAS()
@@ -48,7 +48,7 @@ Returns:
         mina_fila = random.randint(0,filas-1)
         mina_col = random.randint(0, columnas-1)
         
-        coordenada_mina = [mina_fila,mina_col]
+        coordenada_mina: list[int] = [mina_fila,mina_col]
         
         if coordenada_mina not in lista_minas:
             lista_minas.append(coordenada_mina)
@@ -90,7 +90,6 @@ Returns:
         
     if es_matriz(lista_resultado): return  lista_resultado
         
-
 
 
 # -- ES_MATRIZ()
@@ -253,6 +252,7 @@ Returns:
     return False
 
 
+
 # -- NUMEROS_CORRECTOS()
 
 def numeros_correctos(tablero: list[list[int]]) -> bool:
@@ -309,19 +309,40 @@ Returns:
 
 
 
-# -- VERIFICA QUE LA ESTRUCTURA DE UN ESTADO SEA CORRECTA AL IGUAL QUE LOS TIPOS DE DATOS EN LOS TABLEROS
+# -- ESTRUCTURA_Y_TIPOS_VALIDOS()
 
 def estructura_y_tipos_validos(estado: EstadoJuego) -> bool:   
-         
+    '''
+    VERIFICA QUE LA ESTRUCTURA DE UN ESTADO SEA CORRECTA AL IGUAL QUE LOS TIPOS DE DATOS EN LOS TABLEROS
+
+Args:
+    estado: Diccionario que contiene toda información sobre la partida en juego
+
+Returns:
+    True si las filas, columnas, minas, y la estructura y tipos de variable tanto del tablero
+    como de tablero visible, son correctos.
+    '''
+
     if validar_filas(estado) and validar_columnas(estado) and validar_minas(estado) and validar_tablero(estado) and validar_tablero_visible(estado) and cantidad_keys(estado) and son_matriz_misma_dimension(estado["tablero"], estado["tablero_visible"]): return True          
     
     else: return False
     
     
 
-# -- VERIFICA QUE LA CANTIDAD DE FILAS, COLUMNAS Y MINAS SEA MAYOR A CERO
+# -- VALIDAR__FILAS_COLUMNAS_MINAS
 
 def validar_filas(estado: EstadoJuego) -> bool:
+    '''
+    VERIFICA QUE LA CANTIDAD DE FILAS SEA MAYOR A 0 (CERO) Y QUE LA CANTIDAD
+    DE FILAS DEL TABLERO ES LA QUE ESTÁ DECLARADA EN EL ESTADO
+
+Args:
+    estado: Diccionario que contiene toda información sobre la partida en juego
+
+Returns:
+    True si la cantidad de filas es mayor a 0 (cero) y la cantidad de filas del tablero es la que corresponde
+    '''
+
     if estado["filas"] > 0:
         contador: int = 0
         for fila in estado["tablero"]:
@@ -331,9 +352,18 @@ def validar_filas(estado: EstadoJuego) -> bool:
         
     return False
     
-    
-    
 def validar_columnas(estado: EstadoJuego) -> bool:
+    '''
+    VERIFICA QUE LA CANTIDAD DE COLUMNAS SEA MAYOR A 0 (CERO) Y QUE LA CANTIDAD
+    DE COLUMNAS DEL TABLERO ES LA QUE ESTÁ DECLARADA EN EL ESTADO
+
+Args:
+    estado: Diccionario que contiene toda información sobre la partida en juego
+
+Returns:
+    True si la cantidad de columnas es mayor a 0 (cero) y la cantidad de columnas del tablero es la que corresponde
+    '''
+
     if estado["columnas"] > 0:
         contador: int = 0
         for columna in estado["tablero"][0]:
@@ -343,29 +373,59 @@ def validar_columnas(estado: EstadoJuego) -> bool:
         
     return False
 
-
 def validar_minas(estado: EstadoJuego) -> bool:
+    '''
+    VERIFICA QUE LA CANTIDAD DE MINAS SEA MAYOR A CERO Y MENOR A LA CANTIDAD DE CELDAS QUE TIENE EL TABLERO (CANTIDAD DE FILAS * CANTIDAD DE COLUMNAS)
+
+Args:
+    estado: Diccionario que contiene toda información sobre la partida en juego
+
+Returns:
+    True si la cantidad de minas está entre 0 (cero) y la cantidad de celdas que hay (Cantidad minas mayor a cero y menor al producto entre la cantidad de filas y la cantidad de columnas)
+    '''
+
     if estado["minas"] > 0 and estado["minas"] < (estado["filas"]*estado["columnas"]): return True
     
     
     
-# -- VERIFICA QUE LOS TIPOS DE DATOS EN LOS TABLEROS SEAN CORRECTOS    
+# -- VALIDAR_TABLERO_TABLEROVISIBLE   
     
 def validar_tablero(estado: EstadoJuego) -> bool:
+    '''
+    VERIFICA QUE LOS NUMEROS DE UN TABLERO SEAN MAYORES A -1 (MENOS UNO) Y MENORES A 8 (OCHO)
+
+Args:
+    estado: Diccionario que contiene toda información sobre la partida en juego
+
+Returns:
+    True si el numero de cada celda son mayores a -1 (menos uno) y menores a 8 (ocho)
+    '''
+    
     for lista in estado["tablero"]:
             for i in range(len(lista)):
-                elemento = lista[i]
+                elemento: list[int] = lista[i]
                 if elemento < -1 or elemento > 8: return False
 
                 
     return True
 
-
 def validar_tablero_visible(estado: EstadoJuego) -> bool:
+    '''
+    VERIFICA QUE LOS ELEMENTOS DE TABLERO VISIBLE SEAN UN STRING DE ALGÚN NÚMERO ENTRE 0 Y 8,
+    O QUE SEAN UNA BOMBA, VACIO O UNA BANDERA
+
+Args:
+    estado: Diccionario que contiene toda información sobre la partida en juego
+
+Returns:
+    True si cada casillero es una bomba o una bandera o un vacio o un valor entre 0 y 8 (cero y ocho)
+    con tipo de dato "str"
+    '''
+
     global valores
     for lista in estado["tablero_visible"]:
             for i in range(len(lista)):
-                elemento = lista[i]
+                elemento: list[Any] = lista[i]
                 if elemento != BOMBA and elemento != VACIO and elemento != BANDERA and elemento not in valores: 
                     return False
               
@@ -373,27 +433,59 @@ def validar_tablero_visible(estado: EstadoJuego) -> bool:
 
 
 
-# -- VERIFICA QUE LA CANTIDAD DE KEYS DE UN ESTADO SEA SEIS
+# -- CANTIDAD_KEYS()
 
 def cantidad_keys(estado: EstadoJuego) -> bool:
+    '''
+    VERIFICA QUE LA CANTIDAD DE KEYS DE UN ESTADO SEA 6 (SEIS)
+
+Args:
+    estado: Diccionario que contiene toda información sobre la partida en juego
+
+Returns:
+    True si la cantidad de keys de un estado son 6 (seis)
+    '''
+
     if len(estado.keys()) == 6: return True
 
 
        
-# -- VERIFICA QUE LA CANTIDAD DE ELEMENTOS POR FILA DE LOS TABLEROS SEAN LA MISMA, Y QUE LA DIMENSIÓN DE LOS TABLEROS TAMBIÉN SEAN IGUALES ENTRE SI
+# -- SON_MATRIZ_MISMA_DIMENSION()
            
 def son_matriz_misma_dimension(tablero: list[list[int]], tablero_visible: list[list[int]]) -> bool:
-    
+    '''
+    VERIFICA QUE LA CANTIDAD DE ELEMENTOS POR FILA DE LOS TABLEROS SEAN LA MISMA, Y QUE LA DIMENSIÓN DE LOS TABLEROS TAMBIÉN SEAN IGUALES ENTRE SI
+
+Args:
+    tablero: Una matriz bidimensional cuyos valores internos son números enteros entre 0 (cero) y 8 (ocho), o "-1" (si es una bomba)
+    tablero_visible: Una matriz bidimensional cuyos valores internos pueden ser números enteros 
+                     entre 0 y 8 (con tipo de dato "str"), o una BOMBA, o una BANDERA, o VACIO.
+
+Returns:
+    True si la dimension de los tableros son iguales entre si y si la cantidad de elementos por fila sean la misma
+    '''
+
     if es_matriz(tablero) and es_matriz(tablero_visible):
         if len(tablero) == len(tablero_visible):
             if len(tablero[0]) == len(tablero_visible[0]): return True
                 
-                    
+                                    
          
-# -- VERIFICA SI TODAS LAS CELDAS QUE NO SON BOMBAS YA FUERON DESCUBIERTAS
+# -- TODAS_CELDAS_SEGURAS_DESCUBIERTAS()
            
 def todas_celdas_seguras_descubiertas(tablero: list[list[int]], tablero_visible: list[list[int]]) -> bool:
-    
+    '''
+    VERIFICA SI TODAS LAS CELDAS QUE NO SON BOMBAS YA FUERON DESCUBIERTAS
+
+Args:
+    tablero: Una matriz bidimensional cuyos valores internos son números enteros entre 0 (cero) y 8 (ocho), o "-1" (si es una bomba )
+    tablero_visible: Una matriz bidimensional cuyos valores internos pueden ser números enteros 
+                     entre 0 y 8 (con tipo de dato "str"), o una BOMBA, o una BANDERA, o VACIO.
+
+Returns:
+    True si todas las celdas de tablero visible que no son bombas fueron descubiertas
+    '''
+
     for i in range(len(tablero)):
         for j in range(len(tablero[0])):
             
@@ -407,10 +499,21 @@ def todas_celdas_seguras_descubiertas(tablero: list[list[int]], tablero_visible:
     return True
                     
          
-# -- VERIFICA SI HAY ALGUNA BOMBA VISIBLE EN EL TABLERO
+         
+# -- HAY_BOMBA_EN_TABLERO()
            
 def hay_bomba_en_tablero(tablero_visible: list[list[int]]) -> bool:
-    
+    '''
+    VERIFICA SI HAY ALGUNA BOMBA VISIBLE EN EL TABLERO
+
+Args:
+    tablero_visible: Una matriz bidimensional cuyos valores internos pueden ser números enteros 
+                     entre 0 y 8 (con tipo de dato "str"), o una BOMBA, o una BANDERA, o VACIO.
+
+Returns:
+    True si hay alguna bomba visible en el tablero visible
+    '''
+
     for lista in tablero_visible:
         for elemento in lista:
             if elemento == BOMBA: return True
@@ -419,10 +522,21 @@ def hay_bomba_en_tablero(tablero_visible: list[list[int]]) -> bool:
                 
                     
          
-# -- VERIFICA QUE SI EN TABLERO VISIBLE HAY UNA BOMBA, EN LA MISMA COORDENADA EN TABLERO HAY UN "-1"
+# -- VERIFICAR_POSICION_BOMBAS()
            
 def verificar_posicion_bombas(tablero: list[list[int]], tablero_visible: list[list[int]]):
-    
+    '''
+    VERIFICA QUE SI EN TABLERO VISIBLE HAY UNA BOMBA, EN LA MISMA COORDENADA EN TABLERO HAY UN "-1"
+
+Args:
+    tablero: Una matriz bidimensional cuyos valores internos son números enteros entre 0 (cero) y 8 (ocho), o "-1" (si es una bomba)
+    tablero_visible: Una matriz bidimensional cuyos valores internos pueden ser números enteros 
+                     entre 0 y 8 (con tipo de dato "str"), o una BOMBA, o una BANDERA, o VACIO.
+
+Returns:
+    True si en la coordenada donde hay una bomba en tablero visible, también hay un "-1" en tablero
+    '''
+
     for i in range(len(tablero)):
         for j in range(len(tablero[0])):
             
@@ -433,10 +547,22 @@ def verificar_posicion_bombas(tablero: list[list[int]], tablero_visible: list[li
 
 
 
-# -- VERIFICA QUE EL VALOR MOSTRADO EN TABLERO VISIBLE DE UNA CELDA DESCUBIERTA ES EL MISMO VALOR QUE TIENE LA CELDA EN TABLERO
-           
+# -- VERIFICAR_POSICION_NO_BOMBAS()
+        
 def verificar_posicion_no_bombas(tablero: list[list[int]], tablero_visible: list[list[int]]):
-    
+    '''
+    VERIFICA QUE EL VALOR MOSTRADO EN TABLERO VISIBLE AL DESCUBIRIR UNA CELDA ES EL MISMO VALOR 
+    QUE TIENE LA CELDA EN TABLERO
+
+Args:
+    tablero: Una matriz bidimensional cuyos valores internos son números enteros entre 0 (cero) y 8 (ocho), o "-1" (si es una bomba)
+    tablero_visible: Una matriz bidimensional cuyos valores internos pueden ser números enteros 
+                     entre 0 y 8 (con tipo de dato "str"), o una BOMBA, o una BANDERA, o VACIO.
+
+Returns:
+    True si el valor de una celda, mostrado en tablero visible, es el mismo valor de esa misma celda en tablero 
+    '''
+
     for i in range(len(tablero)):
         for j in range(len(tablero[0])):
             
@@ -447,18 +573,38 @@ def verificar_posicion_no_bombas(tablero: list[list[int]], tablero_visible: list
 
 
 
-# -- DADO UN ESTADO, DEVUELVE EL TABLERO VISIBLE
+# -- OBTENER_ESTADO_TABLERO_VISIBLE()
 
 def obtener_estado_tablero_visible(estado: EstadoJuego) -> list[list[str]]:
-    res = estado["tablero_visible"]
+    '''
+    DADO UN ESTADO, DEVUELVE EL TABLERO VISIBLE DEL MISMO
+
+Args:
+    estado: Diccionario que contiene toda información sobre la partida en juego
+
+Returns:
+    El tablero visible del estado del juego cuyos valores internos pueden ser números enteros 
+    entre 0 y 8 (con tipo de dato "str"), o una BOMBA, o una BANDERA, o VACIO.
+    '''
+
+    res: list[list[Any]] = estado["tablero_visible"]
     return res
 
 
 
-# -- COLOCA UNA BANDERA EN EL TABLERO VISIBLE
+# -- MARCAR_CELDA(  )
 
 def marcar_celda(estado: EstadoJuego, fila: int, columna: int) -> None:
-    
+    '''
+    COLOCA UNA BANDERA EN EL TABLERO VISIBLE O LA QUITA, EN CASO DE INTENTAR
+    COLOCARLA EN UN CASILLERO EN EL QUE YA HAY UNA DE ELLAS.
+
+Args:
+    estado: Diccionario que contiene toda información sobre la partida en juego
+    filas: Número mayor a cero que Representa la cantidad de filas que tiene un tablero
+    columnas: Número mayor a cero que representa la cantidad de columnas que tiene un tablero
+    '''
+
     if estado["juego_terminado"] == False:    
         for i in range(fila+1):
             for j in range(columna+1):
@@ -468,20 +614,31 @@ def marcar_celda(estado: EstadoJuego, fila: int, columna: int) -> None:
                     
                     elif estado["tablero_visible"][i][j] == BANDERA: 
                         estado["tablero_visible"][i][j] = VACIO
-    
-                
 
 
 
-# -- DESCUBRIR_CELDA() -------------------------------------------------------------------------
+# -- DESCUBRIR_CELDA() 
 
 def descubrir_celda(estado: EstadoJuego, fila: int, columna: int) -> None:
+    '''
+    CAMBIA EL VALOR DEL TABLERO VISIBLE EN UNA (O MÁS) CELDAS DESDE VACÍO AL NÚMERO QUE LA CELDA
+    POSEE EN EL TABLERO, O UNA BOMBA, EN CASO DE QUE EN TABLERO HAYA UN "-1"
+
+Args:
+    estado: Diccionario que contiene toda información sobre la partida en juego
+    filas: Número mayor a cero que Representa la cantidad de filas que tiene un tablero
+    columnas: Número mayor a cero que representa la cantidad de columnas que tiene un tablero
+    
+Modify:
+    Modifica el tablero visible. Descube todas las celdas que marque caminos_descubiertos() 
+    '''
+
     if estado["tablero_visible"][fila][columna] == VACIO:
         verificar_si_perdiste(estado,fila,columna)
         if estado["juego_terminado"] == False:  
             global celdas_descubiertas
             celdas_descubiertas = []     
-            caminos = caminos_descubiertos(estado["tablero"], estado["tablero_visible"], fila,columna)
+            caminos: list[tuple[int,int]] = caminos_descubiertos(estado["tablero"], estado["tablero_visible"], fila,columna)
             for i in range(estado["filas"]):
                 for j in range(estado["columnas"]):
                     if (i,j) in caminos:
@@ -489,9 +646,25 @@ def descubrir_celda(estado: EstadoJuego, fila: int, columna: int) -> None:
                      
     if verificar_victoria(estado): estado["juego_terminado"] = True
 
-# -- CAMINOS_DESCUBIERTOS() -------------------------------------------------------------------------
+
+
+# -- CAMINOS_DESCUBIERTOS() 
 
 def caminos_descubiertos(tablero: list[list[int]], tablero_visible: list[list[int]], fila: int, columna: int) -> list[tuple[int,int]]:
+    '''
+    MUESTRA LOS CAMINOS DESCUBIERTOS: TODAS LAS CELDAS QUE TIENE QUE DESCUBRIR EN FUNCIÓN DEL VALOR DE CADA UNA DE ELLAS
+
+Args:
+    tablero: Una matriz bidimensional cuyos valores internos son números enteros entre 0 (cero) y 8 (ocho), o "-1" (si es una bomba)
+    tablero_visible: Una matriz bidimensional cuyos valores internos pueden ser números enteros 
+                     entre 0 y 8 (con tipo de dato "str"), o una BOMBA, o una BANDERA, o VACIO.
+    filas: Número mayor a cero que representa la cantidad de filas que tiene un tablero
+    columnas: Número mayor a cero que representa la cantidad de columnas que tiene un tablero
+
+Returns:
+    Una lista de las celdas que se deben descubrir
+    '''
+
     if tablero[fila][columna] > 0:
         return celda_es_numero(tablero, tablero_visible, fila, columna)
     
@@ -499,21 +672,49 @@ def caminos_descubiertos(tablero: list[list[int]], tablero_visible: list[list[in
         
 
 
-# -- CELDA_ES_NUMERO() ------------------------------------------
+# -- CELDA_ES_NUMERO() 
 
 def celda_es_numero(tablero: list[list[int]], tablero_visible: list[list[int]], fila: int, columna: int) -> list[tuple[int,int]]:
+    '''
+    SI LA CELDA DESCUBIERTA ES UN NUMERO DISTINTO DE 0 (CERO), DEVUELVE LA COORDENADA DE LA CELDA PARA QUE SEA
+    LA ÚNICA CELDA QUE SE DESCUBRA
+
+Args:
+    tablero: Una matriz bidimensional cuyos valores internos son números enteros entre 0 (cero) y 8 (ocho), o "-1" (si es una bomba)
+    tablero_visible: Una matriz bidimensional cuyos valores internos pueden ser números enteros 
+                     entre 0 y 8 (con tipo de dato "str"), o una BOMBA, o una BANDERA, o VACIO.
+    filas: Número mayor a cero que Representa la cantidad de filas que tiene un tablero
+    columnas: Número mayor a cero que representa la cantidad de columnas que tiene un tablero
+
+Returns:
+    Una lista que contiene la coordenada de la celda descubierta
+    '''
+
     return [(fila,columna)]
     
 
 
-# -- CELDA_ES_CERO() ------------------------------------------
+# -- CELDA_ES_CERO()
     
 def celda_es_cero(tablero: list[list[int]], tablero_visible: list[list[int]], fila: int, columna: int) -> list[tuple[int,int]]:
-    coordenada: list[int] = [fila,columna]   
-    
+    '''
+    SI EL VALOR DE LA CELDA DESCUBIERTA ES 0 (CERO), MUESTRA EL VALOR DE LAS CELDAS ADYACENTES QUE NO SON BOMBAS.
+    SI ALGUNA DE LAS CELDAS ADYACENTES ES 0, SE APLICA LA FUNCIÓN EN FORMA RECURSIVA PARA DESCUBRIR AÚN MÁS CELDAS
+
+Args:
+    tablero: Una matriz bidimensional cuyos valores internos son números enteros entre 0 (cero) y 8 (ocho), o "-1" (si es una bomba)
+    tablero_visible: Una matriz bidimensional cuyos valores internos pueden ser números enteros 
+                     entre 0 y 8 (con tipo de dato "str"), o una BOMBA, o una BANDERA, o VACIO.    filas: Número mayor a cero que Representa la cantidad de filas que tiene un tablero
+    columnas: Número mayor a cero que representa la cantidad de columnas que tiene un tablero
+
+Returns:
+    Una lista de las coordenadas de las celdas descubiertas, es decir, la celda que se quiere descubrir
+    y sus adyacentes no bombas
+    '''
+
+    coordenada: list[int] = [fila,columna]      
     global celdas_descubiertas
-    celdas_descubiertas.append((fila,columna))
-            
+    celdas_descubiertas.append((fila,columna))            
     for i in range((coordenada[0])-1,(coordenada[0])+2):        
         for j in range((coordenada[1])-1,(coordenada[1])+2):
             
@@ -526,8 +727,21 @@ def celda_es_cero(tablero: list[list[int]], tablero_visible: list[list[int]], fi
                         
     return celdas_descubiertas
    
-    
+   
+   
+# -- VERIFICAR_VICTORIA_DERROTA
+ 
 def verificar_si_perdiste(estado: EstadoJuego, fila: int, columna: int) -> None:
+    '''
+    VERIFICA SI PERDISTE EL JUEGO, ES DECIR, SI LA CELDA DESCUBIERTA CORRESPONDE
+    A UNA BOMBA
+
+Args:
+    estado: Diccionario que contiene toda información sobre la partida en juego
+    filas: Número mayor a cero que Representa la cantidad de filas que tiene un tablero
+    columnas: Número mayor a cero que representa la cantidad de columnas que tiene un tablero
+    '''
+
     for i in range(fila+1):
             for j in range(columna+1):
                 if [i,j] == [fila,columna]:
@@ -537,30 +751,59 @@ def verificar_si_perdiste(estado: EstadoJuego, fila: int, columna: int) -> None:
                         
                     else: estado["juego_terminado"] = False
 
-
-
 def verificar_victoria(estado: EstadoJuego) -> bool:
+    '''
+    VERIFICA SI GANASTE EL JUEGO, ES DECIR, SI TODAS LAS CELDAS SEGURAS FUERON DESCUBIERTAS
+
+Args:
+    estado: Diccionario que contiene toda información sobre la partida en juego
+
+Returns:
+    True si todas las celdas que no son bombas ya fueron descubiertas
+    '''
+
     if todas_celdas_seguras_descubiertas(estado["tablero"], estado["tablero_visible"]): return True
     else: return False
 
 
+
+# -- REINICIAR_JUEGO()
+
 def reiniciar_juego(estado: EstadoJuego) -> None:
-    estado2 = crear_juego(estado["filas"], estado["columnas"], estado["minas"])
+    '''
+    CREA OTRO ESTADO DE JUEGO NUEVO SOBRE EL EXISTENTE, DESDE CERO, ESTANDO EL TABLERO VISIBLE TOTALMENTE VACÍO.
+    EL MISMO TENDRÁ LAS MISMAS DIMENSIONES QUE EL ESTADO DE JUEGO ANTERIOR, PERO SU TABLERO SERÁ DISTINTO.
+
+Args:
+    estado: Diccionario que contiene toda información sobre la partida en juego. Es el estado anterior que poseía el juego.
+    '''
+
+    estado2: EstadoJuego = crear_juego(estado["filas"], estado["columnas"], estado["minas"])
     
     while estado["tablero"] == estado2["tablero"]:
-         estado2 = crear_juego(estado["filas"], estado["columnas"], estado["minas"])
-        
+         estado2 = crear_juego(estado["filas"], estado["columnas"], estado["minas"])        
     global celdas_descubiertas
     celdas_descubiertas = []
-    print(celdas_descubiertas)
     estado["tablero"] = estado2["tablero"]
     estado["tablero_visible"] = estado2["tablero_visible"]
     estado["juego_terminado"] = estado2["juego_terminado"]
     
 
 
+# -- GUARDAR_ESTADO()
 
 def guardar_estado(estado: EstadoJuego, ruta_directorio: str) -> None:
+    '''
+    GUARDA EL EL TABLERO Y EL TABLERO VISIBLE DEL ESTADO DE JUEGO ACTUAL EN DOS ARCHIVOS DE TEXTO
+
+Args:
+    estado: Diccionario que contiene toda información sobre la partida en juego
+    ruta_directorio: La dirección o la ruta de acceso hacia la carpeta donde se almacenan los archivos de texto
+    
+Modify: En tablero.txt escribe los elementos del tablero, separados por comas, utilizando una linea por fila
+        En el tablero_visible.txt escribe los elementos del tablero reemplazando a la BANDERA por "*", al VACIO por "?". Los elementos
+        numéricos los escribe igual que lo hizo con tablero.txt
+    '''
     
     # -- ESTO ES DE TABLERO.TXT --------------------------------------------------------------
     
@@ -569,7 +812,7 @@ def guardar_estado(estado: EstadoJuego, ruta_directorio: str) -> None:
     for i in range(len(estado["tablero"])):
             for j in range(len(estado["tablero"][0])): 
                 if j == (len(estado["tablero"][0]))-1: archivo.write(f"{estado["tablero"][i][j]}")                    
-                else : archivo.write(f"{estado["tablero"][i][j]},")                
+                else : archivo.write(f"{estado['tablero'][i][j]},")                
             archivo.write("\n")
     archivo.close()
     
@@ -590,29 +833,72 @@ def guardar_estado(estado: EstadoJuego, ruta_directorio: str) -> None:
             archivo.write("\n")
     archivo.close()
 
-def clasificar_celda(celda: Any):
+
+
+# -- CLASIFICAR_CELDA()
+
+def clasificar_celda(celda: Any) -> str:
+    '''
+    REALIZA EL REEMPLAZO DE LAS CELDAS QUE SON BANDERA Y VACÍO PARA PODER UTILIZARLAS EN GUARDAR_ESTADO()
+
+Args:
+    celda: Casillero específico dentro del tablero visible cuyos valores internos pueden ser números enteros 
+            entre 0 y 8 (con tipo de dato "str"), o una BOMBA, o una BANDERA, o VACIO.
+    
+Return:
+    El reemplazante de cada valor, excepto que el mismo sea numérico
+    '''
+
     if celda == BANDERA: return "*"
     elif celda == VACIO: return "?"
     else: return celda
 
     
     
+# -- ARCHIVO_COMO_LISTA()
+
 def archivo_como_lista(ruta_directorio, archivo) -> list[str]:
+    '''
+    LEE UN ARCHIVO ESPECÍFICO Y DEVUELVE SU CONTENIDO EN UNA LISTA
+
+Args:
+    
+    ruta_directorio: La dirección o la ruta de acceso hacia la carpeta donde se almacenan los archivos de texto
+    archivo: archivo dentro del sistema de archivos del sistema operativo donde se encuentra o un tablero o un tablero visible
+
+Returns:
+    Una lista donde cada elemento es un string. Cada string es la lectura de una línea del archivo
+    '''
+
     archivo = open(f"{ruta_directorio}\\{archivo}", "r", encoding="UTF-8")
-    lista_archivo = archivo.readlines()
+    lista_archivo: list[str] = archivo.readlines()
     archivo.close()
     return lista_archivo
 
 
 
+# -- CARGAR_ESTADO()
+
 def cargar_estado(estado: EstadoJuego, ruta_directorio: str) -> bool:
-    
+    '''
+    REEMPLAZA TODAS LAS CARACTERÍSTICAS DEL ESTADO DE JUEGO ACTUAL POR LAS CARACTERÍSTICAS QUE TIENE 
+    UN NUEVO ESTADO, DETERMINADO POR SU TABLERO Y SU TABLERO_VISIBLE, QUE SE ENCUENTRAN ALMACENADOS EN UN ARCHIVO
+
+Args:
+    estado: Diccionario que contiene toda información sobre la partida en juego. Es el estado de juego actual
+    ruta_directorio: La dirección o la ruta de acceso hacia la carpeta donde se almacenan los archivos de texto
+
+Returns:
+    True si existen los archivos tablero.txt y tablero_visible.txt en la rua_directorio mecncionada.
+    En este caso, el estado de juego actual se actualizará tomando los valores de el estado que se consiga con los archivos
+    '''
     
     if existe_archivo(ruta_directorio, "tablero.txt") and existe_archivo(ruta_directorio, "tablero_visible.txt"):
-        tablero = archivo_como_lista(ruta_directorio, "tablero.txt")
-        tablero_visible = archivo_como_lista(ruta_directorio, "tablero_visible.txt")
         
-        estado_archivo = crear_estado_desde_archivo(tablero, tablero_visible)
+        tablero: list[str] = archivo_como_lista(ruta_directorio, "tablero.txt")
+        tablero_visible: list[str] = archivo_como_lista(ruta_directorio, "tablero_visible.txt")
+        
+        estado_archivo: EstadoJuego = crear_estado_desde_archivo(tablero, tablero_visible)
         estado["filas"] = estado_archivo["filas"]
         estado["columnas"] = estado_archivo["columnas"]
         estado["minas"] = estado_archivo["minas"]
@@ -623,16 +909,26 @@ def cargar_estado(estado: EstadoJuego, ruta_directorio: str) -> bool:
         return True
         
     return False
-        
                  
-  
-  
-  
-# -- CREAR UN TABLERO DESDE UN ARCHIVO -----------------------------------------------------
+                 
+                   
+# -- CREAR_TABLERO()
           
 def crear_tablero(tablero: list[str]) -> list[list[int]]:
-    lista_fila = []
-    lista_tablero = []
+    '''
+    CREAR UN TABLERO DESDE UNA LISTA PROVENIENTE DE UN ARCHIVO 
+
+Args:
+    tablero: Una lista de strings, que sale de archivo_como_lista(), en la que cada string representa los valores
+    que debe tener una fila del tablero que se desea armar
+
+Returns:
+    Un tablero donde muestra las minas y los valores de las casillas tal cual estaban guardadas en el archivo, pero
+    respetando el formato de estado["tablero"]
+    '''
+
+    lista_fila: list[int] = []
+    lista_tablero: list[list[int]] = []
     global valores
     
     for elemento in tablero:
@@ -650,10 +946,24 @@ def crear_tablero(tablero: list[str]) -> list[list[int]]:
     return lista_tablero
         
         
-# -- CREAR UN TABLERO VISIBLE DESDE UN ARCHIVO -------------------------------------
+        
+# -- CREAR_TABLERO_VISIBLE()
+
 def crear_tablero_visible(tablero_visible: list[str]) -> list[list[Any]]:
-    lista_fila = []
-    lista_tablero = []
+    '''
+    CREAR UN TABLERO VISIBLE DESDE UNA LISTA PROVENIENTE DE UN ARCHIVO
+
+Args:
+    tablero_visible: Una lista de strings, que sale de archivo_como_lista(), en la que cada string representa los valores
+        que debe tener una fila del tablero visible que se desea armar
+
+Returns:
+    Un tablero visible donde muestra las banderas y los vacios guardados en el archivo, teniendo en cuenta
+    que "*" se reemplazará por BANDERA, y "?" por VACIO
+    '''
+
+    lista_fila: list[int] = []
+    lista_tablero: list[list[int]] = []
     global valores
     
     for elemento in tablero_visible:
@@ -670,8 +980,25 @@ def crear_tablero_visible(tablero_visible: list[str]) -> list[list[Any]]:
     return lista_tablero
         
 
+
+# -- CREAR_ESTADO_DESDE_ARCHIVO()
+
 def crear_estado_desde_archivo(tablero: list[str], tablero_visible: list[str]) -> EstadoJuego:
-    
+    '''
+    CREA UN NUEVO ESTADO CON EL TABLERO DE CREAR_TABLERO() Y EL TABLERO VISIBLE DE CREAR_TABLERO_VISIBLE()
+
+Args:
+    tablero: Una lista de strings, que sale de archivo_como_lista(), en la que cada string representa los valores
+            que debe tener una fila del tablero que se desea armar
+    tablero_visible: Una lista de strings, que sale de archivo_como_lista(), en la que cada string representa los valores
+                    que debe tener una fila del tablero visible que se desea armar
+        
+Returns:
+    Un diccionario que contiene la cantidad de filas, de columnas y de minas que hay en el tablero, un booleano que determina
+    que el juego no está terminado, y el tablero y el tablero visible tal como lo rearmaron las funciones crear_tablero()
+    y crear_tablero_visible()   . 
+    '''
+
     estado: EstadoJuego = {
         "filas" : 0,
         "columnas" : 0,
