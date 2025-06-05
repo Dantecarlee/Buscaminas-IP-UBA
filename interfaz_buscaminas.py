@@ -51,6 +51,9 @@ class InterfazBuscaminas:
         self.tablero_frame.pack()
 
         # Crear botones del tablero
+        self.crear_tablero()
+        
+    def crear_tablero(self):
         for i in range(self.estado_juego['filas']):
             fila_botones = []
             for j in range(self.estado_juego['columnas']):
@@ -154,10 +157,20 @@ class InterfazBuscaminas:
         resultado = cargar_estado(self.estado_juego, ".")
 
         if resultado:
+            self.eliminar_tablero()
+            self.crear_tablero()
+
             self.actualizar_interfaz()
             messagebox.showinfo("Cargado", "Juego cargado correctamente")
         else:
             messagebox.showinfo("Error", "No se pudo cargar el juego.")
+
+    def eliminar_tablero(self):
+        """Eliminar tablero actual"""
+        for widget in self.tablero_frame.winfo_children():
+            widget.destroy()
+        self.botones.clear()
+        
 
 
 def main():
