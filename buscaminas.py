@@ -802,9 +802,7 @@ Returns:
     
     for fila in tablero_visible_archivo:
         # False si las filas tienen dimensiones distintas
-        if cantidad_elementos_validos_fila_visible(fila) != cantidad_elementos_validos_fila_visible(tablero_visible_archivo[0]): 
-            print("distintas dimensiones por fila")
-            return (False,0,0)
+        if cantidad_elementos_validos_fila_visible(fila) != cantidad_elementos_validos_fila_visible(tablero_visible_archivo[0]): return (False,0,0)
     
     for i in range(len(estado['tablero_visible'])):
         
@@ -813,14 +811,10 @@ Returns:
         comas_fila: int = 0
         
         # Falso si el tablero comienza en una ","
-        if tablero_visible_archivo[i][0] not in valores and tablero_visible_archivo[i][0] not in ["?", "*"]: 
-            print("comienza con ,")
-            return (False,0,0)
+        if tablero_visible_archivo[i][0] not in valores and tablero_visible_archivo[i][0] not in ["?", "*"]: return (False,0,0)
         
         # Falso si el tablero termina en una ","
-        if tablero_visible_archivo[i][len(tablero_visible_archivo[i])-1] not in valores and tablero_visible_archivo[i][len(tablero_visible_archivo[i])-1] not in["?","*"]: 
-            print(3)
-            return (False,0,0)
+        if tablero_visible_archivo[i][len(tablero_visible_archivo[i])-1] not in valores and tablero_visible_archivo[i][len(tablero_visible_archivo[i])-1] not in["?","*"]: return (False,0,0)
         
         
         while j < len(tablero_visible_archivo[i]) and k < len(estado['tablero_visible'][i]):
@@ -830,17 +824,13 @@ Returns:
                 comas_fila += 1
                 
                 # False si hay dos comas seguidas
-                if tablero_visible_archivo[i][j+1] == ",": 
-                    print(4)
-                    return (False,0,0)
+                if tablero_visible_archivo[i][j+1] == ",": return (False,0,0)
                 j += 1
               
             if (len(estado["tablero"]) == len(estado["tablero_visible"])) and (len(estado["tablero"][0]) == len(estado["tablero_visible"][0])):
                 
                 # Debe figurar el número correspondiente a la cantidad de minas a su alrededor
-                if tablero_visible_archivo[i][j] in valores and tablero_visible_archivo[i][j] != str(calcular_cantidad_minas_adyacentes(estado["tablero"], (i,k))): 
-                    print(5)
-                    return (False,0,0)
+                if tablero_visible_archivo[i][j] in valores and tablero_visible_archivo[i][j] != str(calcular_cantidad_minas_adyacentes(estado["tablero"], (i,k))): return (False,0,0)
             
             j += 1
             k += 1
