@@ -1,7 +1,7 @@
 import unittest
 import os
-from buscaminas import (crear_juego, descubrir_celda, marcar_celda, obtener_estado_tablero_visible, es_matriz,
-                               reiniciar_juego, colocar_minas, calcular_numeros, verificar_victoria, estado_valido, guardar_estado, cargar_estado, BOMBA, BANDERA, VACIO, EstadoJuego)
+from buscaminas import (crear_juego, descubrir_celda, marcar_celda, obtener_estado_tablero_visible,
+                               reiniciar_juego, cambio_de_una_posicion, colocar_minas, calcular_numeros, verificar_victoria, guardar_estado, cargar_estado, BOMBA, BANDERA, VACIO, EstadoJuego)
 
 
 def cant_minas_en_tablero(tablero: list[list[int]]) -> int:
@@ -32,6 +32,7 @@ def dimension_correcta(tablero: list[list[int]], filas: int, columnas: int) -> b
 
 
 class colocar_minasTest(unittest.TestCase):
+    
     def test_tablero_cuadrado(self):
         filas = 5
         columnas = 5
@@ -40,8 +41,10 @@ class colocar_minasTest(unittest.TestCase):
         
         # Testeamos que el tablero tenga solo bombas o ceros
         self.assertTrue(son_solo_ceros_y_bombas(tablero))
-        # Testeamos que haya una mina en el tablero
+        
+        # Testeamos que la cantidad de minas en el tablero sea la correcta
         self.assertEqual(cant_minas_en_tablero(tablero), minas)
+        
         
     def test_una_sola_fila(self):
         filas = 1
@@ -49,9 +52,11 @@ class colocar_minasTest(unittest.TestCase):
         minas = 1
         
         tablero: list[list[int]] = colocar_minas(filas, columnas, minas)
+        
         # Testeamos que el tablero tenga solo bombas o ceros
         self.assertTrue(son_solo_ceros_y_bombas(tablero))
-        # Testeamos que haya una mina en el tablero
+        
+        # Testeamos que la cantidad de minas en el tablero sea la correcta
         self.assertEqual(cant_minas_en_tablero(tablero), minas)
     
     def test_muchas_minas(self):
@@ -60,28 +65,33 @@ class colocar_minasTest(unittest.TestCase):
         minas = 3
         
         tablero: list[list[int]] = colocar_minas(filas, columnas, minas)
-        # Testeamos que el tablero tenga solo bombas o ceros
+        
+        # Testeamos que el tablero tenga solo bombas o ceros        
         self.assertTrue(son_solo_ceros_y_bombas(tablero))
-        # Testeamos que haya una mina en el tablero
+        
+        # Testeamos que la cantidad de minas en el tablero sea la correcta
+        self.assertEqual(cant_minas_en_tablero(tablero), minas)
+        
+    def test_matriz_valida(self):
+        filas = 5
+        columnas = 4
+        minas = 5
+        tablero: list[list[int]] = colocar_minas(filas, columnas, minas)
+        
+        # Testeamos que el tablero tenga la cantidad de filas correcta
+        self.assertEqual(len(tablero), filas)
+        
+        # Testeamos que todas las filas del tablero tengan la misma cantidad de elementos
+        for i in range(len(tablero)):
+            self.assertEqual(len(tablero[i]), columnas)
+            
+        # Testeamos que la cantidad de minas en el tablero sea la correcta
         self.assertEqual(cant_minas_en_tablero(tablero), minas)
         
         
-        
-class es_matrizTest(unittest.TestCase):
-    def test_matriz_vacia(self):
-        #Verifica que una lista vacía no es una matriz
-        self.assertFalse(es_matriz([[]]))
-        
-    def test_matriz_irregular(self):
-        #Verifica que un tablero con filas de diferente tamaño no es una matriz
-        self.assertFalse(es_matriz([[1], [1,2]]))
-        
-    def test_matriz_valida(self):
-        #Verifica que un tablero con filas de igual tamaño es una matriz
-        self.assertTrue(es_matriz([[1,2], [3,4]]))
-        
              
 class calcular_numerosTest(unittest.TestCase):
+    
     def test_dos_bombas(self):
         tablero = [[0,-1,-1],
                     [0,0,0],
@@ -101,15 +111,7 @@ class calcular_numerosTest(unittest.TestCase):
         # Testeamos que el tablero tenga los números correctos
         self.assertEqual(tablero, [[-1,-1,-1,-1],
                                     [-1,5,-1,-1]])
-        
-    def test_tablero_solo_bombas(self):
-        tablero = [[-1,-1],
-                   [-1,-1]]
-        
-        calcular_numeros(tablero)
-        # Testeamos que el tablero no tenga cambios
-        self.assertEqual(tablero, [[-1,-1],
-                                 [-1,-1]])
+
 
 
 class crear_juegoTest(unittest.TestCase):
@@ -179,12 +181,11 @@ class crear_juegoTest(unittest.TestCase):
         self.assertFalse(estado['juego_terminado'])
         # Testeamos que haya una mina en el tablero
         self.assertEqual(cant_minas_en_tablero(estado['tablero']), minas)
-   
-    
-class estado_validoTest(unittest.TestCase):
-    def test_estado_valido(self):
+
         
-        #Definimos un estado válido
+
+class obtener_estado_tablero_visibleTest(unittest.TestCase):
+    def test_tablero_no_vacio_con_cambio(self):
         estado: EstadoJuego = {
         "filas" : 3,
         "columnas" : 4,
@@ -195,181 +196,105 @@ class estado_validoTest(unittest.TestCase):
                      [0,0,1,-1]],
         "tablero_visible":[[BANDERA,BANDERA,"1","0"],
                            [VACIO,VACIO,"2","1"],
-                           [VACIO,VACIO,VACIO,VACIO]]}     
-    
-        #Testeamos que el estado sea válido
-        self.assertTrue(estado_valido(estado))
+                           [VACIO,VACIO,VACIO,VACIO]]}
+        
+        copia_tablero_visible = obtener_estado_tablero_visible(estado)
+        copia_tablero_visible[0][0] = "Cambio"
+        
+        # Testeamos que la copia del estado del tablero sea el esperado
+        self.assertEqual(copia_tablero_visible,[
+            ["Cambio",BANDERA,"1","0"],
+            [VACIO,VACIO,"2","1"],
+            [VACIO,VACIO,VACIO,VACIO]])
+         # Testeamos que nada se modificó
+        self.assertEqual(estado['filas'], 3)
+        self.assertEqual(estado['columnas'], 4)
+        self.assertEqual(estado['minas'], 3)
+        self.assertEqual(estado['tablero'], [
+            [-1,-1,1,0],
+            [2,2,2,1],
+            [0,0,1,-1]
+        ])
+        self.assertEqual(estado['tablero_visible'], [
+            [BANDERA,BANDERA,"1","0"],
+            [VACIO,VACIO,"2","1"],
+            [VACIO,VACIO,VACIO,VACIO]])
+        self.assertFalse(estado['juego_terminado'])
         
         
-    def test_estado_con_filas_erroneas(self):
-        
-        #Definimos un estado inválido ya que la cantidad de filas que debe tener no corresponde al tablero
-        estado: EstadoJuego = {
-        "filas" : 4,
-        "columnas" : 4,
-        "minas" : 3,
-        "juego_terminado" : False,
-        "tablero" : [[-1,-1,1,0],
-                     [2,2,2,1],
-                     [0,0,1,-1]],
-        "tablero_visible":[[BANDERA,BANDERA,"1","0"],
-                           [VACIO,VACIO,"2","1"],
-                           [VACIO,VACIO,VACIO,VACIO]]}     
-    
-        #Testeamos que el estado no sea válido
-        self.assertFalse(estado_valido(estado))
         
         
-    def test_estado_con_columnas_erroneas(self):
-        
-        #Definimos un estado inválido ya que la cantidad de columnas que debe tener no corresponde al tablero
+    def test_tablero_vacio_sin_cambio(self):
         estado: EstadoJuego = {
         "filas" : 3,
-        "columnas" : 5,
-        "minas" : 3,
-        "juego_terminado" : False,
-        "tablero" : [[-1,-1,1,0],
-                     [2,2,2,1],
-                     [0,0,1,-1]],
-        "tablero_visible":[[BANDERA,BANDERA,"1","0"],
-                           [VACIO,VACIO,"2","1"],
-                           [VACIO,VACIO,VACIO,VACIO]]}     
-    
-        #Testeamos que el estado no sea válido
-        self.assertFalse(estado_valido(estado))
-    
-    def test_estado_error_en_estructura_y_tipos_de_datos(self):
-        
-        #Definimos un estado inválido ya que el tablero tiene dimensiones erróneas
-        estado: EstadoJuego = {
-        "filas" : 2,
-        "columnas" : 3,
+        "columnas" : 2,
         "minas" : 2,
         "juego_terminado" : False,
-        "tablero" : [[-1,-1,1],
-                     [2,2,1,1]],
-        "tablero_visible":[[BANDERA,BANDERA,"1"],
-                           [VACIO,VACIO,"1", VACIO]]}     
-    
-        #Testeamos que el estado sea inválido
-        self.assertFalse(estado_valido(estado))
-    
-    
-    def test_estado_error_en_cantidad_de_minas(self):
+        "tablero" : [[-1,-1],
+                     [2,2],
+                     [0,0]],
+        "tablero_visible":[[VACIO,VACIO],
+                           [VACIO,VACIO],
+                           [VACIO,VACIO]]}
         
-        #Definimos un estado inválido ya que posee más minas de las que declara
-        estado: EstadoJuego = {
-        "filas" : 2,
-        "columnas" : 3,
-        "minas" : 2,
-        "juego_terminado" : False,
-        "tablero" : [[-1,-1,2],
-                     [3,-1,2]],
-        "tablero_visible":[[BANDERA,BANDERA,"2"],
-                           [VACIO,VACIO,"2"]]}     
-    
-        #Testeamos que el estado sea inválido
-        self.assertFalse(estado_valido(estado))
-            
-               
-    def test_estado_error_numero_incorrecto(self):
-        
-        #Definimos un estado inválido ya que el tablero tiene una celda cuyo número es erroneo
-        estado: EstadoJuego = {
-        "filas" : 2,
-        "columnas" : 3,
-        "minas" : 2,
-        "juego_terminado" : False,
-        "tablero" : [[-1,-1,1],
-                     [2,3,1]],
-        "tablero_visible":[[BANDERA,BANDERA,"1"],
-                           [VACIO,VACIO,"1"]]}     
-    
-        #Testeamos que el estado sea inválido
-        self.assertFalse(estado_valido(estado))           
-    
-    
-    def test_estado_con_bomba_y_juego_no_terminado(self):
-        
-        #Definimos un estado inválido ya que hay una bomba en el tablero, pero marca que el juego no está terminado
-        estado: EstadoJuego = {
-        "filas" : 2,
-        "columnas" : 3,
-        "minas" : 2,
-        "juego_terminado" : False,
-        "tablero" : [[-1,-1,1],
-                     [2,2,1]],
-        "tablero_visible":[[BANDERA,BOMBA,"1"],
-                           [VACIO,VACIO,"1"]]}     
-    
-        #Testeamos que el estado sea inválido
-        self.assertFalse(estado_valido(estado))  
-               
-    
-    def test_estado_con_bomba_en_celda_segura(self):
-        
-        #Definimos un estado inválido ya que hay una bomba en el tablero, donde debería haber una celda segura
-        estado: EstadoJuego = {
-        "filas" : 2,
-        "columnas" : 3,
-        "minas" : 2,
-        "juego_terminado" : True,
-        "tablero" : [[-1,-1,1],
-                     [2,2,1]],
-        "tablero_visible":[[BANDERA,VACIO,"1"],
-                           [VACIO,VACIO,BOMBA]]}     
-    
-        #Testeamos que el estado sea inválido
-        self.assertFalse(estado_valido(estado))    
-        
-        
-    def test_estado_numero_en_lugar_de_bomba(self):
-        
-        #Definimos un estado inválido ya que hay un número en el lugar donde debería haber una bomba
-        estado: EstadoJuego = {
-        "filas" : 2,
-        "columnas" : 3,
-        "minas" : 2,
-        "juego_terminado" : True,
-        "tablero" : [[-1,-1,1],
-                     [2,2,1]],
-        "tablero_visible":[[BANDERA,"1","1"],
-                           [VACIO,VACIO,"1"]]}     
-    
-        #Testeamos que el estado sea inválido
-        self.assertFalse(estado_valido(estado))   
-               
+        # Testeamos que el estado del tablero sea el esperado
+        self.assertEqual(obtener_estado_tablero_visible(estado),[
+            [VACIO,VACIO],
+            [VACIO,VACIO],
+            [VACIO,VACIO]])
+         # Testeamos que nada se modificó
+        self.assertEqual(estado['filas'], 3)
+        self.assertEqual(estado['columnas'], 2)
+        self.assertEqual(estado['minas'], 2)
+        self.assertEqual(estado['tablero'], [
+            [-1,-1],
+            [2,2],
+            [0,0]
+        ])
+        self.assertEqual(estado['tablero_visible'], [
+            [VACIO,VACIO],
+            [VACIO,VACIO],
+            [VACIO,VACIO]])
+        self.assertFalse(estado['juego_terminado'])
 
-    def test_estado_tablero_visible_invalido(self):
-        
-        #Definimos un estado inválido ya que el tablero visible tiene un número de tipo "int"
-        estado: EstadoJuego = {
-        "filas" : 2,
-        "columnas" : 3,
-        "minas" : 2,
-        "juego_terminado" : False,
-        "tablero" : [[-1,-1,1],
-                     [2,2,1]],
-        "tablero_visible":[[BANDERA,BANDERA,"1"],
-                           [VACIO,VACIO,1]]}     
-    
-        #Testeamos que el estado sea inválido
-        self.assertFalse(estado_valido(estado))
-        
-    def test_estado_con_minas_negativas(self):
-        estado: EstadoJuego = {
-            "filas": 2,
-            "columnas": 3,
-            "minas": -1,
-            "juego_terminado": False,
-            "tablero": [[-1,1,0], [1,1,0]],
-            "tablero_visible": [[VACIO,VACIO,VACIO], [VACIO,VACIO,VACIO]]
-        }
-        self.assertFalse(estado_valido(estado))
-        
 
-        
+
 class marcar_celdaTest(unittest.TestCase):
+    
+    
+    def test_desmarcar_celda(self):
+        estado: EstadoJuego = {
+            'filas': 2,
+            'columnas': 3,
+            'minas': 1,
+            'tablero': [
+                [-1, 1,0],
+                [1, 1,0]
+            ],
+            'tablero_visible': [
+                [VACIO, VACIO],
+                [VACIO, BANDERA]
+            ],
+            'juego_terminado': False
+        }
+        marcar_celda(estado, 1, 1)
+        # Testeamos que la celda se desmarque y todo el resto se quede igual
+        self.assertEqual(estado['tablero_visible'], [
+            [VACIO, VACIO],
+            [VACIO, VACIO]
+        ])
+        # Testeamos que el resto no se modificó
+        self.assertEqual(estado['filas'], 2)
+        self.assertEqual(estado['columnas'], 3)
+        self.assertEqual(estado['minas'], 1)
+        self.assertEqual(estado['tablero'], [
+            [-1, 1, 0],
+            [1, 1, 0]
+        ])
+        self.assertFalse(estado['juego_terminado'])
+        # Testeamos que haya una mina en el tablero
+        self.assertEqual(cant_minas_en_tablero(estado['tablero']), 1)
+    
     def test_marcar_celda(self):
         estado: EstadoJuego = {
             'filas': 2,
@@ -403,40 +328,43 @@ class marcar_celdaTest(unittest.TestCase):
         self.assertFalse(estado['juego_terminado'])
         # Testeamos que haya una mina en el tablero
         self.assertEqual(cant_minas_en_tablero(estado['tablero']), 1)
-
-    def test_desmarcar_celda(self):
+    
+    
+    def test_marcar_celda_descubierta(self):
         estado: EstadoJuego = {
             'filas': 2,
-            'columnas': 3,
+            'columnas': 2,
             'minas': 1,
             'tablero': [
-                [-1, 1,0],
-                [1, 1,0]
+                [-1, 1],
+                [1, 1]
             ],
             'tablero_visible': [
-                [VACIO, VACIO],
-                [VACIO, BANDERA]
+                [VACIO, 1],
+                [VACIO, 1]
             ],
             'juego_terminado': False
         }
-        marcar_celda(estado, 1, 1)
-        # Testeamos que la celda se desmarque y todo el resto se quede igual
+        marcar_celda(estado, 0, 1)
+        
+        # Testeamos que no se modificó el tablero visible
         self.assertEqual(estado['tablero_visible'], [
-            [VACIO, VACIO],
-            [VACIO, VACIO]
+            [VACIO, 1],
+            [VACIO, 1]
         ])
         # Testeamos que el resto no se modificó
         self.assertEqual(estado['filas'], 2)
-        self.assertEqual(estado['columnas'], 3)
+        self.assertEqual(estado['columnas'], 2)
         self.assertEqual(estado['minas'], 1)
         self.assertEqual(estado['tablero'], [
-            [-1, 1, 0],
-            [1, 1, 0]
+            [-1, 1],
+            [1, 1]
         ])
         self.assertFalse(estado['juego_terminado'])
         # Testeamos que haya una mina en el tablero
         self.assertEqual(cant_minas_en_tablero(estado['tablero']), 1)
-        
+  
+    
     def test_juego_terminado(self):
         estado: EstadoJuego = {
             'filas': 2,
@@ -474,6 +402,7 @@ class marcar_celdaTest(unittest.TestCase):
 
 
 class descubrir_celdaTest(unittest.TestCase):
+    
     def test_descubrir_un_cero(self):
         estado: EstadoJuego = {
             'filas': 3,
@@ -535,7 +464,7 @@ class descubrir_celdaTest(unittest.TestCase):
         self.assertEqual(estado['tablero_visible'], [
             [VACIO, VACIO, VACIO],
             [BOMBA, VACIO, VACIO],
-            [VACIO, VACIO, VACIO]
+            [BOMBA, VACIO, VACIO]
         ])
         # Testeamos que el resto no se modificó
         self.assertEqual(estado['filas'], 3)
@@ -549,7 +478,6 @@ class descubrir_celdaTest(unittest.TestCase):
         # Testeamos que el juego esté terminado
         self.assertEqual(cant_minas_en_tablero(estado['tablero']), 2)
         self.assertTrue(estado['juego_terminado'])
-        
         
     def test_descubrir_celda_ganadora(self):
         estado: EstadoJuego = {
@@ -588,9 +516,8 @@ class descubrir_celdaTest(unittest.TestCase):
         # Testeamos que el juego esté terminado
         self.assertEqual(cant_minas_en_tablero(estado['tablero']), 2)
         self.assertTrue(estado['juego_terminado'])
-        
-        
-    def test_descubrir_celda_con_bandera(self):
+
+    def test_descubrir_con_juego_terminado(self):
         estado: EstadoJuego = {
             'filas': 3,
             'columnas': 3,
@@ -601,21 +528,15 @@ class descubrir_celdaTest(unittest.TestCase):
                 [-1, 2, 0]
             ],
             'tablero_visible': [
-                [VACIO, "1", "0"],
-                [BANDERA, "2", "0"],
+                ["1", "1", "0"],
+                [VACIO, "2", "0"],
                 [BANDERA, "2", "0"]
             ],
-            'juego_terminado': False
+            'juego_terminado': True
         }
         descubrir_celda(estado, 1, 0)
         
-        # Testeamos que el tablero visible no se modifique
-        self.assertEqual(estado['tablero_visible'], [
-            [VACIO, "1", "0"],
-            [BANDERA, "2", "0"],
-            [BANDERA, "2", "0"]
-        ])
-        # Testeamos que el resto no se modificó
+        # Testeamos que no se modificó nada
         self.assertEqual(estado['filas'], 3)
         self.assertEqual(estado['columnas'], 3)
         self.assertEqual(estado['minas'], 2)
@@ -624,24 +545,16 @@ class descubrir_celdaTest(unittest.TestCase):
             [-1, 2, 0],
             [-1, 2, 0]
         ])
-        # Testeamos que el juego no esté terminado y que sigan existiendo dos bombas
-        self.assertEqual(cant_minas_en_tablero(estado['tablero']), 2)
-        self.assertFalse(estado['juego_terminado'])
+        self.assertEqual(estado['tablero_visible'], [
+                ["1", "1", "0"],
+                [VACIO, "2", "0"],
+                [BANDERA, "2", "0"]
+            ])
         
-    
-    def test_descubrir_celda_ya_descubierta(self):
-        estado: EstadoJuego = {
-            'filas': 2,
-            'columnas': 2,
-            'minas': 1,
-            'tablero': [[-1,1],[1,1]],
-            'tablero_visible': [["1",VACIO],[VACIO,VACIO]],
-            'juego_terminado': False
-        }
-        descubrir_celda(estado, 0, 0)
-        #Testeamos que no haya cambios en el tablero visible
-        self.assertEqual(estado['tablero_visible'], [["1",VACIO],[VACIO,VACIO]])
-
+        # Testeamos que el juego esté terminado
+        self.assertTrue(estado['juego_terminado'])
+        
+        
 
 class verificar_victoriaTest(unittest.TestCase):
     def test_juego_ganado(self):
@@ -657,10 +570,10 @@ class verificar_victoriaTest(unittest.TestCase):
                 [VACIO, "1", "0"],
                 ["1", "1", "0"]
             ],
-            'juego_terminado': False
+            'juego_terminado': True
         }
         
-        # Testeamos que el juego no esté terminado pero que haya ganado
+        # Testeamos que haya ganado
         self.assertTrue(verificar_victoria(estado))
         # Testeamos que el resto no se modificó
         self.assertEqual(estado['filas'], 2)
@@ -674,7 +587,7 @@ class verificar_victoriaTest(unittest.TestCase):
             [VACIO, "1", "0"],
             ["1", "1", "0"]
         ])
-        self.assertFalse(estado['juego_terminado'])
+        self.assertTrue(estado['juego_terminado'])
         
         
     def test_juego_no_ganado(self):
@@ -692,6 +605,22 @@ class verificar_victoriaTest(unittest.TestCase):
             ],
             'juego_terminado': False
         }
+        
+        # Testeamos que no haya ganado
+        self.assertFalse(verificar_victoria(estado))
+        # Testeamos que el resto no se modificó
+        self.assertEqual(estado['filas'], 2)
+        self.assertEqual(estado['columnas'], 3)
+        self.assertEqual(estado['minas'], 1)
+        self.assertEqual(estado['tablero'], [
+            [-1, 1, 0],
+            [ 1, 1, 0]
+        ])
+        self.assertEqual(estado['tablero_visible'], [
+            [VACIO, "1", "0"],
+            [VACIO, "1", "0"]
+        ])
+        self.assertFalse(estado['juego_terminado'])
         
         
         
@@ -727,74 +656,7 @@ class verificar_victoriaTest(unittest.TestCase):
         ])
         self.assertTrue(estado['juego_terminado'])
         
-
-class obtener_estado_tableroTest(unittest.TestCase):
-    def test_tablero_no_vacio(self):
-        estado: EstadoJuego = {
-        "filas" : 3,
-        "columnas" : 4,
-        "minas" : 3,
-        "juego_terminado" : False,
-        "tablero" : [[-1,-1,1,0],
-                     [2,2,2,1],
-                     [0,0,1,-1]],
-        "tablero_visible":[[BANDERA,BANDERA,"1","0"],
-                           [VACIO,VACIO,"2","1"],
-                           [VACIO,VACIO,VACIO,VACIO]]}
         
-        # Testeamos que el estado del tablero sea el esperado
-        self.assertEqual(obtener_estado_tablero_visible(estado),[
-            [BANDERA,BANDERA,"1","0"],
-            [VACIO,VACIO,"2","1"],
-            [VACIO,VACIO,VACIO,VACIO]])
-         # Testeamos que nada se modificó
-        self.assertEqual(estado['filas'], 3)
-        self.assertEqual(estado['columnas'], 4)
-        self.assertEqual(estado['minas'], 3)
-        self.assertEqual(estado['tablero'], [
-            [-1,-1,1,0],
-            [2,2,2,1],
-            [0,0,1,-1]
-        ])
-        self.assertEqual(estado['tablero_visible'], [
-            [BANDERA,BANDERA,"1","0"],
-            [VACIO,VACIO,"2","1"],
-            [VACIO,VACIO,VACIO,VACIO]])
-        self.assertFalse(estado['juego_terminado'])
-        
-    def test_tablero_vacio(self):
-        estado: EstadoJuego = {
-        "filas" : 3,
-        "columnas" : 2,
-        "minas" : 2,
-        "juego_terminado" : False,
-        "tablero" : [[-1,-1],
-                     [2,2],
-                     [0,0]],
-        "tablero_visible":[[VACIO,VACIO],
-                           [VACIO,VACIO],
-                           [VACIO,VACIO]]}
-        
-        # Testeamos que el estado del tablero sea el esperado
-        self.assertEqual(obtener_estado_tablero_visible(estado),[
-            [VACIO,VACIO],
-            [VACIO,VACIO],
-            [VACIO,VACIO]])
-         # Testeamos que nada se modificó
-        self.assertEqual(estado['filas'], 3)
-        self.assertEqual(estado['columnas'], 2)
-        self.assertEqual(estado['minas'], 2)
-        self.assertEqual(estado['tablero'], [
-            [-1,-1],
-            [2,2],
-            [0,0]
-        ])
-        self.assertEqual(estado['tablero_visible'], [
-            [VACIO,VACIO],
-            [VACIO,VACIO],
-            [VACIO,VACIO]])
-        self.assertFalse(estado['juego_terminado'])
-
 
 class reiniciar_juegoTest(unittest.TestCase):
     def test_tablero_cuadrado(self):
@@ -827,33 +689,193 @@ class reiniciar_juegoTest(unittest.TestCase):
         self.assertEqual(len(estado['tablero']), 2)
         self.assertEqual(len(estado['tablero'][0]), 2)
         self.assertFalse(estado['juego_terminado'])
+        
         # Testeamos que es diferente tablero
         self.assertNotEqual(estado['tablero'], [
             [-1, 1],
-            [ 1, 1]
-        ])
+            [ 1, 1]])
         
     def test_reiniciar_juego_terminado(self):
         estado: EstadoJuego = {
             'filas': 2,
             'columnas': 2,
             'minas': 1,
-            'tablero': [[-1,1],[1,1]],
-            'tablero_visible': [[BOMBA,"1"],["1","1"]],
+            'tablero': [[-1,1],
+                        [1,1]],
+            'tablero_visible': [[BOMBA,"1"],
+                                ["1","1"]],
             'juego_terminado': True
         }
         reiniciar_juego(estado)
         
-        #Testeamos que el juego no esté terminado
+        # Testeamos que el juego esté reiniciado
+        self.assertEqual(estado['tablero_visible'], [
+            [VACIO, VACIO],
+            [VACIO, VACIO]
+        ])
+        # Testeamos que haya una mina en el tablero
+        self.assertEqual(cant_minas_en_tablero(estado['tablero']), 1)
+        self.assertEqual(estado['filas'], 2)
+        self.assertEqual(estado['columnas'], 2)
+        self.assertEqual(estado['minas'], 1)
+        self.assertEqual(len(estado['tablero']), 2)
+        self.assertEqual(len(estado['tablero'][0]), 2)
         self.assertFalse(estado['juego_terminado'])
-        #Testeamos que el tablero visible esté totalmente vacío
-        self.assertEqual(estado['tablero_visible'], [[VACIO,VACIO],[VACIO,VACIO]])
         # Testeamos que es diferente tablero
         self.assertNotEqual(estado['tablero'], [
             [-1, 1],
-            [ 1, 1]
-        ])
+            [ 1, 1]])    
+
+# Hacemos test particulares para esta función porque al ejecutar la funcion que la llama
+# (reiniciar_juego), existe la posibilidad de que cambio_de_una_posición no se utilice.
+class cambio_de_una_posicionTest(unittest.TestCase):
+    def test_cambio_posicion(self):
+        estado: EstadoJuego = {
+            'filas': 2,
+            'columnas': 2,
+            'minas': 1,
+            'tablero': [
+                [-1, 1],
+                [ 1, 1]
+            ],
+            'tablero_visible': [
+                [VACIO, VACIO],
+                [VACIO, VACIO]
+            ],
+            'juego_terminado': False
+        }
         
+        nuevo_estado = cambio_de_una_posicion(estado)
+        
+        # Testeamos que la posicion (0,0) haya sido intercambiada por la (0,1)
+        self.assertEqual(nuevo_estado["tablero"], [
+                [1, -1],
+                [ 1, 1]
+            ])
+        
+        # Testeamos que el resto no se modifica
+        self.assertEqual(nuevo_estado["filas"], 2)
+        self.assertEqual(nuevo_estado["columnas"], 2)
+        self.assertEqual(nuevo_estado["minas"], 1)
+        
+        # Testeamos que el tablero visible no cambie (de eso se encarga la funcion Reiniciar Juego)
+        self.assertEqual(nuevo_estado["tablero_visible"], [
+                [VACIO, VACIO],
+                [VACIO, VACIO]
+            ])
+        
+        
+    def test_bombas_juntas(self):
+        estado: EstadoJuego = {
+            'filas': 2,
+            'columnas': 4,
+            'minas': 3,
+            'tablero': [
+                [-1, -1,-1,1],
+                [ 2, 3, 2, 1]
+            ],
+            'tablero_visible': [
+                [VACIO, VACIO, VACIO, VACIO],
+                [VACIO, VACIO, VACIO, VACIO]
+            ],
+            'juego_terminado': False
+        }
+        
+        nuevo_estado = cambio_de_una_posicion(estado)
+        
+        # Testeamos que la posicion (0,0) haya sido intercambiada por la (0,3)
+        # Testeamos que el resto del tablero tenga los numeros correspondientes
+        self.assertEqual(nuevo_estado["tablero"], [
+                [1, -1,-1,-1],
+                [ 1, 2, 3, 2]
+            ])
+        
+        # Testeamos que el resto no se modifica
+        self.assertEqual(nuevo_estado["filas"], 2)
+        self.assertEqual(nuevo_estado["columnas"], 4)
+        self.assertEqual(nuevo_estado["minas"], 3)
+        
+        # Testeamos que el tablero visible no cambie (de eso se encarga la funcion Reiniciar Juego)
+        self.assertEqual(nuevo_estado["tablero_visible"], [
+                [VACIO, VACIO, VACIO, VACIO],
+                [VACIO, VACIO, VACIO, VACIO]
+            ])
+        
+        
+    
+    def test_fila_de_bombas(self):
+        estado: EstadoJuego = {
+            'filas': 2,
+            'columnas': 4,
+            'minas': 4,
+            'tablero': [
+                [-1, -1,-1,-1],
+                [ 2, 3, 3, 2]
+            ],
+            'tablero_visible': [
+                [VACIO, VACIO, VACIO, VACIO],
+                [VACIO, VACIO, VACIO, VACIO]
+            ],
+            'juego_terminado': False
+        }
+        
+        nuevo_estado = cambio_de_una_posicion(estado)
+        
+        # Testeamos que la posicion (0,0) haya sido intercambiada por la (0,3)
+        # Testeamos que el resto del tablero tenga los numeros correspondientes
+        self.assertEqual(nuevo_estado["tablero"], [
+                [2, -1,-1,-1],
+                [ -1, 3, 3, 2]
+            ])
+        
+        # Testeamos que el resto no se modifica
+        self.assertEqual(nuevo_estado["filas"], 2)
+        self.assertEqual(nuevo_estado["columnas"], 4)
+        self.assertEqual(nuevo_estado["minas"], 4)
+        
+        # Testeamos que el tablero visible no cambie (de eso se encarga la funcion Reiniciar Juego)
+        self.assertEqual(nuevo_estado["tablero_visible"], [
+                [VACIO, VACIO, VACIO, VACIO],
+                [VACIO, VACIO, VACIO, VACIO]
+            ])
+        
+        
+        
+    def test_bomba_ultima_posicion(self):
+        estado: EstadoJuego = {
+            'filas': 2,
+            'columnas': 2,
+            'minas': 1,
+            'tablero': [
+                [1, 1],
+                [ 1, -1]
+            ],
+            'tablero_visible': [
+                [VACIO, VACIO],
+                [VACIO, VACIO]
+            ],
+            'juego_terminado': False
+        }
+        
+        nuevo_estado = cambio_de_una_posicion(estado)
+        
+        # Testeamos que la posicion (0,0) haya sido intercambiada por la (0,1)
+        self.assertEqual(nuevo_estado["tablero"], [
+                [-1, 1],
+                [ 1, 1]
+            ])
+        
+        # Testeamos que el resto no se modifica
+        self.assertEqual(nuevo_estado["filas"], 2)
+        self.assertEqual(nuevo_estado["columnas"], 2)
+        self.assertEqual(nuevo_estado["minas"], 1)
+        
+        # Testeamos que el tablero visible no cambie (de eso se encarga la funcion Reiniciar Juego)
+        self.assertEqual(nuevo_estado["tablero_visible"], [
+                [VACIO, VACIO],
+                [VACIO, VACIO]
+            ])
+
 
 
 class guardar_estadoTest(unittest.TestCase):
@@ -876,21 +898,28 @@ class guardar_estadoTest(unittest.TestCase):
         }
         
         ruta_directorio = os.path.join("test_guardar_estado", "test_estado_iniciado")
+        ruta_tablero = os.path.join("test_guardar_estado", "test_estado_iniciado", "tablero.txt")
+        ruta_tablero_visible = os.path.join("test_guardar_estado", "test_estado_iniciado", "tablero_visible.txt")
+        
         valores = ["0","1","2","3","4","5","6","7","8","-"] 
         
         #Guardamos el estado en el archivo
         guardar_estado(estado, ruta_directorio)
         
         # Para tablero.txt
-        archivo = open(f"{ruta_directorio}\\tablero.txt", "r", encoding="UTF-8")
+        
+        archivo = open(ruta_tablero, "r", encoding="UTF-8")
         lista_archivo = archivo.readlines()
         archivo.close()
                 
         for i in range(len(estado['tablero'])):
             j = 0
             k = 0
-            while j < len(lista_archivo[i]) and k < len(estado['tablero'][0]):
-                while lista_archivo[i][j] not in valores:
+            
+        # Recorremos el tablero y el contenido del archivo a la vez, para ir comparando los valores
+            while j < len(lista_archivo[i]) and k < len(estado['tablero'][0]): 
+                
+                while lista_archivo[i][j] not in valores:   #Para verificar que no es una coma
                     j += 1
                 
                 if lista_archivo[i][j] == "-":
@@ -904,13 +933,59 @@ class guardar_estadoTest(unittest.TestCase):
                 
                 j += 1
                 k += 1
+                
+                      
+        # Para tablero_visible.txt
+        
+        archivo = open(ruta_tablero_visible, "r", encoding="UTF-8")
+        lista_archivo = archivo.readlines()
+        archivo.close()
+                
+        for i in range(len(estado['tablero_visible'])):
+            j = 0
+            k = 0
+            while j < len(lista_archivo[i]) and k < len(estado['tablero_visible'][0]):
+                while lista_archivo[i][j] == ",":
+                    j += 1
+                
+                if lista_archivo[i][j] == "*":
+                    #Testeamos que si hay un "*" en archivo, en la misma coordenada de tablero visible haya una BANDERA
+                    self.assertEqual(estado['tablero_visible'][i][k], BANDERA)
+                    
+                elif lista_archivo[i][j] == "?":
+                    #Testeamos que si hay un "?" en archivo, en la misma coordenada de tablero visible haya una BOMBA
+                    self.assertEqual(estado['tablero_visible'][i][k], VACIO)
+                                        
+                else: 
+                    #Testeamos que el número que aparece en el archivo coincida con el del tablero en esa misma coordenada
+                    self.assertEqual((lista_archivo[i][j]), estado['tablero_visible'][i][k])
+                
+                j += 1
+                k += 1
+                
+                
+        # Testeamos que el resto del estado no se modificó
+        self.assertEqual(estado['filas'], 3)
+        self.assertEqual(estado['columnas'], 3)
+        self.assertEqual(estado['minas'],2)
+        self.assertEqual(estado['tablero'], [
+                [1, 1, 0],
+                [-1, 2, 0],
+                [-1, 2, 0]
+            ])
+        self.assertEqual(estado['tablero_visible'], [
+                [VACIO, "1", "0"],
+                [BANDERA, "2", "0"],
+                [BANDERA, "2", "0"]
+            ])
+        self.assertFalse(estado['juego_terminado'])
        
                 
     def test_estado_no_iniciado(self):
         estado: EstadoJuego = {
             'filas': 3,
             'columnas': 3,
-            'minas': 1,
+            'minas': 3,
             'tablero': [
                 [1, 2, -1],
                 [-1, 3, 1],
@@ -923,15 +998,17 @@ class guardar_estadoTest(unittest.TestCase):
             ],
             'juego_terminado': False
         }
-        
         ruta_directorio = os.path.join("test_guardar_estado", "test_estado_no_iniciado")
+        ruta_tablero = os.path.join("test_guardar_estado", "test_estado_no_iniciado", "tablero.txt")
+        ruta_tablero_visible = os.path.join("test_guardar_estado", "test_estado_no_iniciado", "tablero_visible.txt")
+        
         valores = ["0","1","2","3","4","5","6","7","8","-"] 
         
         #Guardamos el estado en el archivo
         guardar_estado(estado, ruta_directorio)
         
         # Para tablero.txt
-        archivo = open(f"{ruta_directorio}\\tablero.txt", "r", encoding="UTF-8")
+        archivo = open(ruta_tablero, "r", encoding="UTF-8")
         lista_archivo = archivo.readlines()
         archivo.close()
                 
@@ -957,7 +1034,7 @@ class guardar_estadoTest(unittest.TestCase):
         
         # Para tablero_visible.txt
         
-        archivo = open(f"{ruta_directorio}\\tablero_visible.txt", "r", encoding="UTF-8")
+        archivo = open(ruta_tablero_visible, "r", encoding="UTF-8")
         lista_archivo = archivo.readlines()
         archivo.close()
                 
@@ -983,6 +1060,24 @@ class guardar_estadoTest(unittest.TestCase):
                 j += 1
                 k += 1
         
+        
+        # Testeamos que el resto del estado no se modificó
+        self.assertEqual(estado['filas'], 3)
+        self.assertEqual(estado['columnas'], 3)
+        self.assertEqual(estado['minas'],3)
+        self.assertEqual(estado['tablero'], [
+                [1, 2, -1],
+                [-1, 3, 1],
+                [-1, 2, 0]
+            ])
+        self.assertEqual(estado['tablero_visible'], [
+                [VACIO, VACIO, VACIO],
+                [VACIO, VACIO, VACIO],
+                [VACIO, VACIO, VACIO]
+            ])
+        self.assertFalse(estado['juego_terminado'])
+
+
 
 class cargar_estadoTest(unittest.TestCase):
     
@@ -1007,10 +1102,11 @@ class cargar_estadoTest(unittest.TestCase):
             
         ruta_directorio = os.path.join("test_cargar_estado", "test_juego_iniciado")
         
-        # Cargar el estado guardado en "test_estado_valido\\tablero.txt y tablero_visible.txt"
+        # Cargar el estado guardado en "test_juego_iniciado\\tablero.txt y tablero_visible.txt"
         resultado = cargar_estado(estado, ruta_directorio)
         
         # Verificar que la carga fue correcta
+        
         self.assertTrue(resultado)
         
         # Verificar que los datos se cargaron correctamente
@@ -1029,7 +1125,7 @@ class cargar_estadoTest(unittest.TestCase):
         ])
         self.assertFalse(estado['juego_terminado'])
         
-    
+        
     def test_cargar_juego_no_iniciado(self):
         
         #Definimos un estado trivial que será sobreescrito por el estado cargado
@@ -1075,7 +1171,487 @@ class cargar_estadoTest(unittest.TestCase):
         ])
         self.assertFalse(estado['juego_terminado'])
         
+    
+    def test_tablero_comas_de_mas(self):
         
+        #Definimos un estado trivial que será sobreescrito por el estado cargado
+        estado: EstadoJuego = {
+            'filas': 3,
+            'columnas': 2,
+            'minas': 1,
+            'tablero': [
+                [-1, 1],
+                [1, 1],
+                [0, 0]
+            ],
+            'tablero_visible': [
+                [VACIO, VACIO],
+                ["1", "1"],
+                ["0", "0"]
+            ],
+            'juego_terminado': False
+        }
+        
+            
+        ruta_directorio = os.path.join("test_cargar_estado", "test_tablero_comas_de_mas")
+        
+        # Cargar el estado guardado en "test_comas_de_mas\\tablero.txt y tablero_visible.txt"
+        resultado = cargar_estado(estado, ruta_directorio)
+        
+        # Verificar que la carga fue incorrecta
+        self.assertFalse(resultado)
+        
+    
+    def test_visible_comas_de_mas(self):
+        
+        #Definimos un estado trivial que será sobreescrito por el estado cargado
+        estado: EstadoJuego = {
+            'filas': 3,
+            'columnas': 2,
+            'minas': 1,
+            'tablero': [
+                [-1, 1],
+                [1, 1],
+                [0, 0]
+            ],
+            'tablero_visible': [
+                [VACIO, VACIO],
+                ["1", "1"],
+                ["0", "0"]
+            ],
+            'juego_terminado': False
+        }
+        
+            
+        ruta_directorio = os.path.join("test_cargar_estado", "test_visible_comas_de_mas")
+        
+        # Cargar el estado guardado en "test_comas_de_mas\\tablero.txt y tablero_visible.txt"
+        resultado = cargar_estado(estado, ruta_directorio)
+        
+        # Verificar que la carga fue incorrecta
+        self.assertFalse(resultado)
+        
+        
+    def test_tablero_dimensiones_distintas(self):
+        
+        #Definimos un estado trivial que será sobreescrito por el estado cargado
+        estado: EstadoJuego = {
+            'filas': 3,
+            'columnas': 2,
+            'minas': 1,
+            'tablero': [
+                [-1, 1],
+                [1, 1],
+                [0, 0]
+            ],
+            'tablero_visible': [
+                [VACIO, VACIO],
+                ["1", "1"],
+                ["0", "0"]
+            ],
+            'juego_terminado': False
+        }
+        
+            
+        ruta_directorio = os.path.join("test_cargar_estado", "test_dimensiones_distintas")
+        
+        # Cargar el estado guardado en "test_dimensiones_distintas\\tablero.txt y tablero_visible.txt"
+        resultado = cargar_estado(estado, ruta_directorio)
+        
+        # Verificar que la carga fue incorrecta
+        self.assertFalse(resultado)
+    
+            
+    def test_tablero_dimensiones_erroneas(self):
+        
+        #Definimos un estado trivial que será sobreescrito por el estado cargado
+        estado: EstadoJuego = {
+            'filas': 3,
+            'columnas': 2,
+            'minas': 1,
+            'tablero': [
+                [-1, 1],
+                [1, 1],
+                [0, 0]
+            ],
+            'tablero_visible': [
+                [VACIO, VACIO],
+                ["1", "1"],
+                ["0", "0"]
+            ],
+            'juego_terminado': False
+        }
+        
+            
+        ruta_directorio = os.path.join("test_cargar_estado", "test_tablero_dimensiones_erroneas")
+        
+        # Cargar el estado guardado en "test_tablero_dimensiones_erroneas\\tablero.txt y tablero_visible.txt"
+        resultado = cargar_estado(estado, ruta_directorio)
+        
+        # Verificar que la carga fue incorrecta
+        self.assertFalse(resultado)
+    
+        
+    def test_visible_dimensiones_erroneas(self):
+        
+        #Definimos un estado trivial que será sobreescrito por el estado cargado
+        estado: EstadoJuego = {
+            'filas': 3,
+            'columnas': 2,
+            'minas': 1,
+            'tablero': [
+                [-1, 1],
+                [1, 1],
+                [0, 0]
+            ],
+            'tablero_visible': [
+                [VACIO, VACIO],
+                ["1", "1"],
+                ["0", "0"]
+            ],
+            'juego_terminado': False
+        }
+        
+            
+        ruta_directorio = os.path.join("test_cargar_estado", "test_visible_dimensiones_erroneas")
+        
+        # Cargar el estado guardado en "test_visible_dimensiones_erroneas\\tablero.txt y tablero_visible.txt"
+        resultado = cargar_estado(estado, ruta_directorio)
+        
+        # Verificar que la carga fue incorrecta
+        self.assertFalse(resultado)
+    
+      
+    def test_solo_bombas(self):
+        
+        #Definimos un estado trivial que será sobreescrito por el estado cargado
+        estado: EstadoJuego = {
+            'filas': 3,
+            'columnas': 2,
+            'minas': 1,
+            'tablero': [
+                [-1, 1],
+                [1, 1],
+                [0, 0]
+            ],
+            'tablero_visible': [
+                [VACIO, VACIO],
+                ["1", "1"],
+                ["0", "0"]
+            ],
+            'juego_terminado': False
+        }
+        
+            
+        ruta_directorio = os.path.join("test_cargar_estado", "test_solo_bombas")
+        
+        # Cargar el estado guardado en "test_solo_bombas\\tablero.txt y tablero_visible.txt"
+        resultado = cargar_estado(estado, ruta_directorio)
+        
+        # Verificar que la carga fue incorrecta
+        self.assertFalse(resultado)
+    
+
+    def test_archivos_vacios(self):
+        
+        #Definimos un estado trivial que será sobreescrito por el estado cargado
+        estado: EstadoJuego = {
+            'filas': 3,
+            'columnas': 2,
+            'minas': 1,
+            'tablero': [
+                [-1, 1],
+                [1, 1],
+                [0, 0]
+            ],
+            'tablero_visible': [
+                [VACIO, VACIO],
+                ["1", "1"],
+                ["0", "0"]
+            ],
+            'juego_terminado': False
+        }
+        
+            
+        ruta_directorio = os.path.join("test_cargar_estado", "test_archivos_vacios")
+        
+        # Cargar el estado guardado en "test_archivos_vacios\\tablero.txt y tablero_visible.txt"
+        resultado = cargar_estado(estado, ruta_directorio)
+        
+        # Verificar que la carga fue incorrecta
+        self.assertFalse(resultado)
+    
+    
+    def test_tablero_elemento_incorrecto(self):
+        
+        #Definimos un estado trivial que será sobreescrito por el estado cargado
+        estado: EstadoJuego = {
+            'filas': 3,
+            'columnas': 2,
+            'minas': 1,
+            'tablero': [
+                [-1, 1],
+                [1, 1],
+                [0, 0]
+            ],
+            'tablero_visible': [
+                [VACIO, VACIO],
+                ["1", "1"],
+                ["0", "0"]
+            ],
+            'juego_terminado': False
+        }
+        
+            
+        ruta_directorio = os.path.join("test_cargar_estado", "test_tablero_elemento_incorrecto")
+        
+        # Cargar el estado guardado en "test_elementos_incorrectos\\tablero.txt y tablero_visible.txt"
+        resultado = cargar_estado(estado, ruta_directorio)
+        
+        # Verificar que la carga fue incorrecta
+        self.assertFalse(resultado)   
+       
+    
+    def test_visible_elemento_incorrecto(self):
+        
+        #Definimos un estado trivial que será sobreescrito por el estado cargado
+        estado: EstadoJuego = {
+            'filas': 3,
+            'columnas': 2,
+            'minas': 1,
+            'tablero': [
+                [-1, 1],
+                [1, 1],
+                [0, 0]
+            ],
+            'tablero_visible': [
+                [VACIO, VACIO],
+                ["1", "1"],
+                ["0", "0"]
+            ],
+            'juego_terminado': False
+        }
+        
+            
+        ruta_directorio = os.path.join("test_cargar_estado", "test_visible_elemento_incorrecto")
+        
+        # Cargar el estado guardado en "test_elementos_incorrectos\\tablero.txt y tablero_visible.txt"
+        resultado = cargar_estado(estado, ruta_directorio)
+        
+        # Verificar que la carga fue incorrecta
+        self.assertFalse(resultado)   
+        
+        
+    def test_tablero_numero_erroneo(self):
+        
+        #Definimos un estado trivial que será sobreescrito por el estado cargado
+        estado: EstadoJuego = {
+            'filas': 3,
+            'columnas': 2,
+            'minas': 1,
+            'tablero': [
+                [-1, 1],
+                [1, 1],
+                [0, 0]
+            ],
+            'tablero_visible': [
+                [VACIO, VACIO],
+                ["1", "1"],
+                ["0", "0"]
+            ],
+            'juego_terminado': False
+        }
+        
+            
+        ruta_directorio = os.path.join("test_cargar_estado", "test_tablero_numero_erroneo")
+        
+        # Cargar el estado guardado en "test_numeros_erroneos\\tablero.txt y tablero_visible.txt"
+        resultado = cargar_estado(estado, ruta_directorio)
+        
+        # Verificar que la carga fue incorrecta
+        self.assertFalse(resultado)
+    
+           
+    def test_visible_numero_erroneo(self):
+        
+        #Definimos un estado trivial que será sobreescrito por el estado cargado
+        estado: EstadoJuego = {
+            'filas': 3,
+            'columnas': 2,
+            'minas': 1,
+            'tablero': [
+                [-1, 1],
+                [1, 1],
+                [0, 0]
+            ],
+            'tablero_visible': [
+                [VACIO, VACIO],
+                ["1", "1"],
+                ["0", "0"]
+            ],
+            'juego_terminado': False
+        }
+        
+            
+        ruta_directorio = os.path.join("test_cargar_estado", "test_visible_numero_erroneo")
+        
+        # Cargar el estado guardado en "test_visible_numero_erroneo\\tablero.txt y tablero_visible.txt"
+        resultado = cargar_estado(estado, ruta_directorio)
+        
+        # Verificar que la carga fue incorrecta
+        self.assertFalse(resultado)
+    
+    
+    def test_tablero_coma_al_final(self):
+        
+        #Definimos un estado trivial que será sobreescrito por el estado cargado
+        estado: EstadoJuego = {
+            'filas': 3,
+            'columnas': 2,
+            'minas': 1,
+            'tablero': [
+                [-1, 1],
+                [1, 1],
+                [0, 0]
+            ],
+            'tablero_visible': [
+                [VACIO, VACIO],
+                ["1", "1"],
+                ["0", "0"]
+            ],
+            'juego_terminado': False
+        }
+        
+            
+        ruta_directorio = os.path.join("test_cargar_estado", "test_tablero_coma_al_final")
+        
+        # Cargar el estado guardado en "test_comas_al_final\\tablero.txt y tablero_visible.txt"
+        resultado = cargar_estado(estado, ruta_directorio)
+        
+        # Verificar que la carga fue incorrecta
+        self.assertFalse(resultado) 
+        
+    
+    def test_visible_coma_al_final(self):
+        
+        #Definimos un estado trivial que será sobreescrito por el estado cargado
+        estado: EstadoJuego = {
+            'filas': 3,
+            'columnas': 2,
+            'minas': 1,
+            'tablero': [
+                [-1, 1],
+                [1, 1],
+                [0, 0]
+            ],
+            'tablero_visible': [
+                [VACIO, VACIO],
+                ["1", "1"],
+                ["0", "0"]
+            ],
+            'juego_terminado': False
+        }
+        
+            
+        ruta_directorio = os.path.join("test_cargar_estado", "test_visible_coma_al_final")
+        
+        # Cargar el estado guardado en "test_comas_al_final\\tablero.txt y tablero_visible.txt"
+        resultado = cargar_estado(estado, ruta_directorio)
+        
+        # Verificar que la carga fue incorrecta
+        self.assertFalse(resultado) 
+        
+    
+    def test_tablero_coma_al_principio(self):
+        
+        #Definimos un estado trivial que será sobreescrito por el estado cargado
+        estado: EstadoJuego = {
+            'filas': 3,
+            'columnas': 2,
+            'minas': 1,
+            'tablero': [
+                [-1, 1],
+                [1, 1],
+                [0, 0]
+            ],
+            'tablero_visible': [
+                [VACIO, VACIO],
+                ["1", "1"],
+                ["0", "0"]
+            ],
+            'juego_terminado': False
+        }
+        
+            
+        ruta_directorio = os.path.join("test_cargar_estado", "test_tablero_coma_al_principio")
+        
+        # Cargar el estado guardado en "test_comas_al_final\\tablero.txt y tablero_visible.txt"
+        resultado = cargar_estado(estado, ruta_directorio)
+        
+        # Verificar que la carga fue incorrecta
+        self.assertFalse(resultado) 
+      
+    
+    def test_visible_coma_al_principio(self):
+        
+        #Definimos un estado trivial que será sobreescrito por el estado cargado
+        estado: EstadoJuego = {
+            'filas': 3,
+            'columnas': 2,
+            'minas': 1,
+            'tablero': [
+                [-1, 1],
+                [1, 1],
+                [0, 0]
+            ],
+            'tablero_visible': [
+                [VACIO, VACIO],
+                ["1", "1"],
+                ["0", "0"]
+            ],
+            'juego_terminado': False
+        }
+        
+            
+        ruta_directorio = os.path.join("test_cargar_estado", "test_visible_coma_al_principio")
+        
+        # Cargar el estado guardado en "test_comas_al_final\\tablero.txt y tablero_visible.txt"
+        resultado = cargar_estado(estado, ruta_directorio)
+        
+        # Verificar que la carga fue incorrecta
+        self.assertFalse(resultado) 
+       
+    
+    def test_archivos_sin_bombas(self):
+        
+        #Definimos un estado trivial que será sobreescrito por el estado cargado
+        estado: EstadoJuego = {
+            'filas': 3,
+            'columnas': 2,
+            'minas': 1,
+            'tablero': [
+                [-1, 1],
+                [1, 1],
+                [0, 0]
+            ],
+            'tablero_visible': [
+                [VACIO, VACIO],
+                ["1", "1"],
+                ["0", "0"]
+            ],
+            'juego_terminado': False
+        }
+        
+            
+        ruta_directorio = os.path.join("test_cargar_estado", "test_archivos_sin_bomba")
+        
+        # Cargar el estado guardado en "test_archivos_sin_bomba\\tablero.txt y tablero_visible.txt"
+        resultado = cargar_estado(estado, ruta_directorio)
+        
+        # Verificar que la carga fue incorrecta
+        self.assertFalse(resultado) 
+        
+     
     def test_cargar_estado_archivos_no_existen(self):
         estado: EstadoJuego = {
             'filas': 2,
