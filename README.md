@@ -39,4 +39,4 @@ python interfaz_buscaminas.py
 
 - Dante Carletti
 - Joaquín Callao
-- German Altierifue realizado con fines académicos en el marco de la Licenciatura en Ciencia de Datos (UBA).*
+- German Altieri
