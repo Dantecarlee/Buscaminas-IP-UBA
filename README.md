@@ -28,6 +28,14 @@ python interfaz_buscaminas.py
 - `interfaz_buscaminas.py` — graphical interface built with tkinter *(base structure provided by the course)*
 - `test_propios.py` — unit tests using `unittest`, covering board generation, adjacent mine calculation, edge cases, and save/load integrity
 
+## Running the tests
+
+```bash
+python -m unittest test_propios
+```
+
+The suite has 49 tests covering board generation, adjacent mine counting, game logic and save/load validation (the test fixtures live in `test_cargar_estado/` and `test_guardar_estado/`).
+
 ## Features
 
 - 8x8 board with 10 mines (default)
